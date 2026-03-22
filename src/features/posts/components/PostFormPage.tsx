@@ -26,6 +26,7 @@ import {
   CheckCircleOutlined,
   UploadOutlined,
   StarOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { analyzePost } from '@/lib/content-analyzer';
 import type { AnalysisResult } from '@/lib/content-analyzer';
@@ -37,6 +38,7 @@ import {
   getPosts,
   createPost,
   updatePost,
+  aiGenerateFromUrl,
   aiGenerateContent,
   aiOptimizeSeo,
   aiImproveContent,
@@ -76,9 +78,48 @@ export default function PostFormPage() {
   const [generateTopic, setGenerateTopic] = useState('');
   const [generateCategory, setGenerateCategory] = useState('');
   const [generateKeywords, setGenerateKeywords] = useState('');
+  const [urlModalOpen, setUrlModalOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlCategory, setUrlCategory] = useState('');
   const [aiLoading, setAiLoading] = useState<'generate' | 'seo' | 'improve' | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
+
+  const handleGenerateFromUrl = async () => {
+    if (!urlInput.trim()) {
+      message.warning('Nhập URL trang web');
+      return;
+    }
+    try { new URL(urlInput.trim()); } catch {
+      message.warning('URL không hợp lệ');
+      return;
+    }
+    setAiLoading('generate');
+    try {
+      const result = await aiGenerateFromUrl({
+        url: urlInput.trim(),
+        category: urlCategory || undefined,
+      });
+      form.setFieldsValue({
+        title: result.title,
+        content: result.content,
+        excerpt: result.excerpt,
+        slug: result.slug,
+        seoTitle: result.seoTitle,
+        seoDescription: result.seoDescription,
+        tags: result.tags,
+        category: urlCategory || form.getFieldValue('category'),
+      });
+      setUrlModalOpen(false);
+      setUrlInput('');
+      setUrlCategory('');
+      message.success('AI đã tạo bài viết từ URL xong!');
+    } catch (err) {
+      message.error(getApiError(err, 'Tạo từ URL thất bại'));
+    } finally {
+      setAiLoading(null);
+    }
+  };
 
   const handleScore = () => {
     const values = form.getFieldsValue();
@@ -245,6 +286,16 @@ export default function PostFormPage() {
               onClick={() => setGenerateModalOpen(true)}
             >
               Tạo nội dung
+            </Button>
+          </Tooltip>
+          <Tooltip title="Đọc nội dung từ URL rồi viết lại thành bài viết GaRutin">
+            <Button
+              size="small"
+              icon={<LinkOutlined />}
+              loading={aiLoading === 'generate'}
+              onClick={() => setUrlModalOpen(true)}
+            >
+              Tạo từ URL
             </Button>
           </Tooltip>
           <Tooltip title="Tối ưu SEO title, description, slug, tags">
@@ -503,6 +554,54 @@ export default function PostFormPage() {
             type="info"
             message="AI sẽ tạo tiêu đề, nội dung, tóm tắt, SEO và tags hoàn chỉnh. Có thể mất 15–30 giây."
             showIcon
+          />
+        </div>
+      </Modal>
+
+      {/* URL Modal */}
+      <Modal
+        title={
+          <span>
+            <LinkOutlined className="text-green-500 mr-2" />
+            Tạo bài viết từ URL
+          </span>
+        }
+        open={urlModalOpen}
+        onCancel={() => { setUrlModalOpen(false); setUrlInput(''); setUrlCategory(''); }}
+        onOk={handleGenerateFromUrl}
+        okText="Tạo bài viết"
+        cancelText="Hủy"
+        confirmLoading={aiLoading === 'generate'}
+        okButtonProps={{ icon: <RocketOutlined /> }}
+      >
+        <div className="space-y-4 mt-4">
+          <div>
+            <Text strong>URL trang web *</Text>
+            <Input
+              className="mt-1"
+              prefix={<LinkOutlined className="text-gray-400" />}
+              placeholder="https://example.com/bai-viet-ve-ga-rutin"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onPressEnter={handleGenerateFromUrl}
+            />
+          </div>
+          <div>
+            <Text strong>Danh mục</Text>
+            <Select
+              className="w-full mt-1"
+              allowClear
+              placeholder="Chọn danh mục..."
+              value={urlCategory || undefined}
+              onChange={(v) => setUrlCategory(v ?? '')}
+              options={CATEGORIES}
+            />
+          </div>
+          <Alert
+            type="warning"
+            showIcon
+            message="Lưu ý"
+            description="AI sẽ đọc nội dung trang web rồi viết lại hoàn toàn theo phong cách GaRutin — không copy nguyên văn. Một số trang có thể chặn truy cập bot. Có thể mất 20–40 giây."
           />
         </div>
       </Modal>

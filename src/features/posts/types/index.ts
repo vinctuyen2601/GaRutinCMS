@@ -21,6 +21,22 @@ export type CreatePostPayload = Omit<Post, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdatePostPayload = Partial<CreatePostPayload>;
 
 // AI types
+export type GenerateFromUrlPayload = {
+  url: string;
+  category?: string;
+};
+
+export type GenerateFromUrlResult = {
+  title: string;
+  content: string;
+  excerpt: string;
+  slug: string;
+  seoTitle: string;
+  seoDescription: string;
+  tags: string[];
+  sourceUrl: string;
+};
+
 export type GenerateContentPayload = {
   topic: string;
   category?: string;
