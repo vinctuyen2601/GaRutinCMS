@@ -297,10 +297,10 @@ export default function ProductFormPage() {
               <Input placeholder="ga-rutin-duc-truong-thanh" />
             </Form.Item>
             <Form.Item label="Giá gốc (₫)" name="price" rules={[{ required: true }]}>
-              <InputNumber style={{ width: '100%' }} min={0} step={1000} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} />
+              <InputNumber style={{ width: '100%' }} min={0} step={10000} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={(v) => (Number(v?.replace(/\./g, '') ?? 0) as 0)} />
             </Form.Item>
             <Form.Item label="Giá sale (₫)" name="salePrice">
-              <InputNumber style={{ width: '100%' }} min={0} step={1000} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} />
+              <InputNumber style={{ width: '100%' }} min={0} step={10000} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={(v) => (Number(v?.replace(/\./g, '') ?? 0) as 0)} />
             </Form.Item>
             <Form.Item label="Danh mục" name="categoryId">
               <Select options={categoryOptions} placeholder="Chọn danh mục" allowClear />
