@@ -34,8 +34,8 @@ import {
   aiGenerateContent,
   aiOptimizeSeo,
   aiImproveContent,
-  uploadMedia,
 } from '../services';
+import { uploadMedia } from '../../media/services';
 import MediaPicker from '../../media/components/MediaPicker';
 import { getApiError } from '@/lib/error';
 
