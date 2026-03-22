@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import MainLayout from '@/components/layouts/MainLayout';
 import PrivateRoute from '@/routes/PrivateRoute';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const LoginPage           = lazy(() => import('@/features/auth/components/LoginPage'));
 const DashboardPage       = lazy(() => import('@/features/dashboard/components/DashboardPage'));
@@ -33,6 +34,7 @@ function PrivateLayout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ErrorBoundary>
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -52,6 +54,7 @@ export default function App() {
           <Route path="*"                  element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
