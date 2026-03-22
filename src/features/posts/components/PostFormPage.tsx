@@ -27,6 +27,8 @@ import {
   UploadOutlined,
   StarOutlined,
   LinkOutlined,
+  SendOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import { analyzePost } from '@/lib/content-analyzer';
 import type { AnalysisResult } from '@/lib/content-analyzer';
@@ -475,10 +477,35 @@ export default function PostFormPage() {
           </div>
 
           <Form.Item className="mt-4">
-            <Space>
+            <Space wrap>
               <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
                 {isEdit ? 'Lưu thay đổi' : 'Tạo bài viết'}
               </Button>
+              <Form.Item noStyle shouldUpdate={(prev, cur) => prev.status !== cur.status}>
+                {({ getFieldValue, setFieldValue }) => {
+                  const status = getFieldValue('status');
+                  if (status === 'published') {
+                    return (
+                      <Button
+                        danger
+                        icon={<StopOutlined />}
+                        onClick={() => { setFieldValue('status', 'draft'); form.submit(); }}
+                      >
+                        Hủy đăng
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button
+                      icon={<SendOutlined />}
+                      style={{ background: '#16a34a', borderColor: '#16a34a', color: '#fff' }}
+                      onClick={() => { setFieldValue('status', 'published'); form.submit(); }}
+                    >
+                      Đăng bài
+                    </Button>
+                  );
+                }}
+              </Form.Item>
               <Button onClick={() => navigate('/posts')}>Hủy</Button>
             </Space>
           </Form.Item>
