@@ -45,11 +45,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         style={{ background: '#14532d', height: '100vh', position: 'sticky', top: 0, left: 0, overflow: 'auto' }}
       >
         <div
-          className="flex items-center justify-center py-5 cursor-pointer"
+          className="flex items-center justify-center py-4 px-3 cursor-pointer"
           onClick={() => navigate('/dashboard')}
         >
-          <span style={{ fontSize: 24 }}>🐦</span>
-          {!collapsed && <span className="ml-2 text-white font-bold text-lg">GaRutin</span>}
+          {collapsed ? (
+            <img src="/favicon.svg" alt="GaRutin" style={{ width: 32, height: 32 }} />
+          ) : (
+            <img src="/logo.svg" alt="GaRutin" style={{ height: 38, maxWidth: 180 }} />
+          )}
         </div>
 
         <Menu
