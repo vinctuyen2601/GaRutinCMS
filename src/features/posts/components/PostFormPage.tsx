@@ -318,15 +318,13 @@ export default function PostFormPage() {
               Cải thiện nội dung
             </Button>
           </Tooltip>
-          <div className="ml-auto">
-            <Button
-              size="small"
-              icon={<StarOutlined />}
-              onClick={handleScore}
-            >
-              Tính điểm
-            </Button>
-          </div>
+          <Button
+            size="small"
+            icon={<StarOutlined />}
+            onClick={handleScore}
+          >
+            Tính điểm
+          </Button>
         </div>
       </Card>
 
@@ -416,7 +414,7 @@ export default function PostFormPage() {
                       Upload
                     </Button>
                   </Upload>
-                  <MediaPicker onSelect={(url) => form.setFieldValue('coverImage', url)} />
+                  <MediaPicker onSelect={(url) => form.setFieldValue('coverImage', url)} name={form.getFieldValue('title')} />
                 </Space>
               }
             />

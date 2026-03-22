@@ -8,9 +8,10 @@ import type { MediaFile } from '../types';
 
 type Props = {
   onSelect: (url: string) => void;
+  name?: string; // tên sản phẩm/bài viết — dùng để đặt tên file SEO-friendly
 };
 
-export default function MediaPicker({ onSelect }: Props) {
+export default function MediaPicker({ onSelect, name }: Props) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);

@@ -365,7 +365,7 @@ export default function ProductFormPage() {
                           Upload ảnh
                         </Button>
                       </Upload>
-                      <MediaPicker onSelect={handlePickImage} />
+                      <MediaPicker onSelect={handlePickImage} name={form.getFieldValue('name')} />
                     </Space>
                   </div>
                 );
