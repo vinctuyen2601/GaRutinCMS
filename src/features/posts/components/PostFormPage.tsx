@@ -14,6 +14,8 @@ import {
   Tag,
   Tooltip,
   Upload,
+  Row,
+  Col,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -23,7 +25,11 @@ import {
   BulbOutlined,
   CheckCircleOutlined,
   UploadOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
+import { analyzePost } from '@/lib/content-analyzer';
+import type { AnalysisResult } from '@/lib/content-analyzer';
+import ScorePanel from '@/components/ScorePanel';
 import { useNavigate, useParams } from 'react-router-dom';
 import useSWR from 'swr';
 import type { CreatePostPayload } from '../types';
@@ -72,6 +78,12 @@ export default function PostFormPage() {
   const [generateKeywords, setGenerateKeywords] = useState('');
   const [aiLoading, setAiLoading] = useState<'generate' | 'seo' | 'improve' | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
+
+  const handleScore = () => {
+    const values = form.getFieldsValue();
+    setScoreResult(analyzePost(values));
+  };
   const [seoSuggestions, setSeoSuggestions] = useState<string[]>([]);
   const [improvements, setImprovements] = useState<string[]>([]);
 
@@ -255,6 +267,15 @@ export default function PostFormPage() {
               Cải thiện nội dung
             </Button>
           </Tooltip>
+          <div className="ml-auto">
+            <Button
+              size="small"
+              icon={<StarOutlined />}
+              onClick={handleScore}
+            >
+              Tính điểm
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -296,6 +317,8 @@ export default function PostFormPage() {
         />
       )}
 
+      <Row gutter={16} align="top">
+      <Col xs={24} lg={scoreResult ? 17 : 24}>
       <Card>
         <Form
           form={form}
@@ -412,6 +435,15 @@ export default function PostFormPage() {
           </Form.Item>
         </Form>
       </Card>
+      </Col>
+      {scoreResult && (
+        <Col xs={24} lg={7}>
+          <div className="sticky top-4">
+            <ScorePanel result={scoreResult} title="Điểm bài viết" />
+          </div>
+        </Col>
+      )}
+      </Row>
 
       {/* Generate Modal */}
       <Modal
