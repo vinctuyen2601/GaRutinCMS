@@ -87,7 +87,7 @@ export default function CategoriesPage() {
     <div className="space-y-4">
       <Title level={4} className="!mb-0">Danh mục ({categories.length})</Title>
 
-      <Table dataSource={categories} columns={columns} rowKey="id" loading={isLoading} pagination={false} size="small" />
+      <Table dataSource={categories} columns={columns} rowKey="id" loading={isLoading} pagination={false} size="small" scroll={{ x: 500 }} />
 
       <div className="flex gap-2 mt-3">
         <Input placeholder="Tên danh mục *" value={addName} onChange={(e) => setAddName(e.target.value)} onPressEnter={handleAdd} style={{ maxWidth: 300 }} />

@@ -88,7 +88,7 @@ export default function OrderDetailPage() {
       </Card>
 
       <Card title="Cập nhật trạng thái">
-        <Space>
+        <Space wrap>
           <Select
             value={order.status}
             options={STATUS_OPTIONS}

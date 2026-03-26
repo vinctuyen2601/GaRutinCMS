@@ -1,4 +1,4 @@
-import { Table, Button, Tag, Popconfirm, Space, Typography, message, Tooltip } from 'antd';
+import { Table, Button, Tag, Popconfirm, Space, Typography, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
@@ -80,33 +80,29 @@ export default function PostsPage() {
       render: (_: unknown, r: Post) => (
         <Space size={4}>
           {r.status === 'published' ? (
-            <Tooltip title="Hủy đăng → Nháp">
-              <Popconfirm
-                title="Hủy đăng bài viết này?"
-                description="Bài viết sẽ chuyển về trạng thái Nháp."
-                okText="Hủy đăng"
-                cancelText="Bỏ qua"
-                onConfirm={() => handleTogglePublish(r)}
-              >
-                <Button type="text" size="small" icon={<StopOutlined />} danger>
-                  Hủy đăng
-                </Button>
-              </Popconfirm>
-            </Tooltip>
+            <Popconfirm
+              title="Hủy đăng bài viết này?"
+              description="Bài viết sẽ chuyển về trạng thái Nháp."
+              okText="Hủy đăng"
+              cancelText="Bỏ qua"
+              onConfirm={() => handleTogglePublish(r)}
+            >
+              <Button type="text" size="small" icon={<StopOutlined />} danger>
+                Hủy đăng
+              </Button>
+            </Popconfirm>
           ) : (
-            <Tooltip title="Đăng bài">
-              <Popconfirm
-                title="Đăng bài viết này?"
-                okText="Đăng"
-                cancelText="Bỏ qua"
-                okButtonProps={{ style: { background: '#16a34a', borderColor: '#16a34a' } }}
-                onConfirm={() => handleTogglePublish(r)}
-              >
-                <Button type="text" size="small" icon={<CheckCircleOutlined />} style={{ color: '#16a34a' }}>
-                  Đăng bài
-                </Button>
-              </Popconfirm>
-            </Tooltip>
+            <Popconfirm
+              title="Đăng bài viết này?"
+              okText="Đăng"
+              cancelText="Bỏ qua"
+              okButtonProps={{ style: { background: '#16a34a', borderColor: '#16a34a' } }}
+              onConfirm={() => handleTogglePublish(r)}
+            >
+              <Button type="text" size="small" icon={<CheckCircleOutlined />} style={{ color: '#16a34a' }}>
+                Đăng bài
+              </Button>
+            </Popconfirm>
           )}
           <Button type="text" icon={<EditOutlined />} size="small" onClick={() => navigate(`/posts/${r.id}/edit`)} />
           <Popconfirm title="Xóa bài viết này?" okText="Xóa" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => handleDelete(r.id)}>
@@ -132,6 +128,7 @@ export default function PostsPage() {
         rowKey="id"
         loading={isLoading}
         pagination={{ pageSize: 20 }}
+        scroll={{ x: 600 }}
       />
     </div>
   );

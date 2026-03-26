@@ -29,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
-      <Card style={{ width: 380 }}>
+    <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+      <Card style={{ width: '100%', maxWidth: 380 }}>
         <div className="text-center mb-6">
           <div style={{ fontSize: 40, marginBottom: 8 }}>🐦</div>
           <Title level={3} className="!mb-1">GaRutin CMS</Title>
