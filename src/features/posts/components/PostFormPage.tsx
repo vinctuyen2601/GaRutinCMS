@@ -11,7 +11,6 @@ import {
   Divider,
   Modal,
   Alert,
-  Tag,
   Tooltip,
   Upload,
   Row,
@@ -128,7 +127,7 @@ export default function PostFormPage() {
     setScoreResult(analyzePost(values));
   };
   const [seoSuggestions, setSeoSuggestions] = useState<string[]>([]);
-  const [improvements, setImprovements] = useState<string[]>([]);
+  const [improveSummary, setImproveSummary] = useState<string>('');
 
   const { data: posts = [] } = useSWR(isEdit ? 'admin-posts' : null, getPosts);
 
@@ -242,7 +241,7 @@ export default function PostFormPage() {
       return;
     }
     setAiLoading('improve');
-    setImprovements([]);
+    setImproveSummary('');
     try {
       const result = await aiImproveContent({
         title: values.title,
@@ -253,7 +252,7 @@ export default function PostFormPage() {
         content: result.content,
         excerpt: result.excerpt,
       });
-      setImprovements(result.improvements ?? []);
+      setImproveSummary(result.summary ?? '');
       message.success('Đã cải thiện nội dung!');
     } catch (err) {
       message.error(getApiError(err, 'Cải thiện nội dung thất bại'));
@@ -348,23 +347,15 @@ export default function PostFormPage() {
         />
       )}
 
-      {/* Improvements */}
-      {improvements.length > 0 && (
+      {/* Improve summary */}
+      {improveSummary && (
         <Alert
           type="success"
           icon={<CheckCircleOutlined />}
           message="Cải thiện đã thực hiện"
-          description={
-            <div className="mt-1 flex flex-wrap gap-1">
-              {improvements.map((imp, i) => (
-                <Tag key={i} color="green">
-                  {imp}
-                </Tag>
-              ))}
-            </div>
-          }
+          description={improveSummary}
           closable
-          onClose={() => setImprovements([])}
+          onClose={() => setImproveSummary('')}
         />
       )}
 

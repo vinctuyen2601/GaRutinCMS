@@ -13,6 +13,10 @@ export type Post = {
   publishedAt?: string;
   seoTitle?: string;
   seoDescription?: string;
+  seoScore?: number;
+  contentScore?: number;
+  seoDetails?: Record<string, any>;
+  keywordId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -68,6 +72,7 @@ export type OptimizeSeoResult = {
   slug: string;
   tags: string[];
   suggestions: string[];
+  manualSuggestions: string[];
 };
 
 export type ImproveContentPayload = {
@@ -81,5 +86,5 @@ export type ImproveContentPayload = {
 export type ImproveContentResult = {
   content: string;
   excerpt: string;
-  improvements: string[];
+  summary: string;
 };

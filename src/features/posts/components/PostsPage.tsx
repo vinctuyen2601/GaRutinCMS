@@ -1,10 +1,12 @@
-import { Table, Button, Tag, Popconfirm, Space, Typography, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Table, Button, Tag, Popconfirm, Space, Typography, message, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, StopOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
 import type { Post } from '../types';
 import { getPosts, deletePost, updatePost } from '../services';
+import { getActiveKeyword, crawlToDrafts } from '@/features/keywords/services';
 import { getApiError } from '@/lib/error';
 
 const { Title } = Typography;
@@ -18,6 +20,8 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 export default function PostsPage() {
   const navigate = useNavigate();
   const { data: posts = [], isLoading, mutate } = useSWR('admin-posts', getPosts);
+  const { data: activeKeyword } = useSWR('admin-keywords-active', getActiveKeyword);
+  const [crawling, setCrawling] = useState(false);
 
   const handleDelete = async (id: string) => {
     try {
@@ -26,6 +30,19 @@ export default function PostsPage() {
       mutate();
     } catch (e) {
       message.error(getApiError(e, 'Xóa thất bại'));
+    }
+  };
+
+  const handleCrawl = async () => {
+    setCrawling(true);
+    try {
+      const result = await crawlToDrafts(3);
+      message.success(`Đã tạo ${result.created.length} bài draft từ keyword "${result.keyword}"`);
+      mutate();
+    } catch (e) {
+      message.error(getApiError(e, 'Crawl thất bại'));
+    } finally {
+      setCrawling(false);
     }
   };
 
@@ -117,9 +134,22 @@ export default function PostsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Title level={4} className="!mb-0">Bài viết ({posts.length})</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/posts/new')}>
-          Thêm bài viết
-        </Button>
+        <Space>
+          <Tooltip title={activeKeyword ? `Crawl 3 bài với keyword "${activeKeyword.keyword}"` : 'Chưa có keyword active'}>
+            <Button
+              icon={<ThunderboltOutlined />}
+              loading={crawling}
+              disabled={!activeKeyword}
+              onClick={handleCrawl}
+              style={{ borderColor: '#16a34a', color: '#16a34a' }}
+            >
+              Crawl tự động
+            </Button>
+          </Tooltip>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/posts/new')}>
+            Thêm bài viết
+          </Button>
+        </Space>
       </div>
 
       <Table
