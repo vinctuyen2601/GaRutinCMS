@@ -3,7 +3,7 @@ import api from '@/lib/axios';
 export const getVisitStats = (from?: string, to?: string) =>
   api.get('/admin/analytics/visits', { params: { from, to } }).then(r => r.data);
 
-export const getVisitTable = (params: { from?: string; to?: string; platform?: string; path?: string }) =>
+export const getVisitTable = (params: { from?: string; to?: string; path?: string }) =>
   api.get('/admin/analytics/table', { params }).then(r => r.data);
 
 export const getOrderStats = (from?: string, to?: string) =>

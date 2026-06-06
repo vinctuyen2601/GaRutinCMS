@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
-  Card, DatePicker, Row, Col, Table, Tag, Typography, Statistic, Spin,
-  Select, Input, Button, Space, Progress,
+  Card, DatePicker, Row, Col, Table, Typography, Statistic, Spin,
+  Input, Button, Space, Progress,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -14,20 +14,6 @@ import { getVisitStats, getVisitTable } from '../services';
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const PLATFORM_LABELS: Record<string, { label: string; color: string }> = {
-  facebook: { label: 'Facebook', color: '#1877f2' },
-  youtube:  { label: 'YouTube',  color: '#ff0000' },
-  tiktok:   { label: 'TikTok',   color: '#010101' },
-  zalo:     { label: 'Zalo',     color: '#0068ff' },
-  web:      { label: 'Trực tiếp', color: '#16a34a' },
-  other:    { label: 'Khác',     color: '#9ca3af' },
-};
-
-const PLATFORM_OPTIONS = [
-  { value: '', label: 'Tất cả nền tảng' },
-  ...Object.entries(PLATFORM_LABELS).map(([value, { label }]) => ({ value, label })),
-];
-
 interface TimelineRow {
   date: string;
   visits: number;
@@ -36,7 +22,6 @@ interface TimelineRow {
 
 interface TableRow {
   path: string;
-  platform: string;
   visits: number;
   uniqueVisitors: number;
 }
@@ -45,9 +30,8 @@ export default function AnalyticsPage() {
   const today    = dayjs().format('YYYY-MM-DD');
   const monthAgo = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
 
-  const [from, setFrom]           = useState(monthAgo);
-  const [to, setTo]               = useState(today);
-  const [platform, setPlatform]   = useState('');
+  const [from, setFrom]               = useState(monthAgo);
+  const [to, setTo]                   = useState(today);
   const [searchInput, setSearchInput] = useState('');
   const [appliedPath, setAppliedPath] = useState('');
 
@@ -57,13 +41,12 @@ export default function AnalyticsPage() {
   );
 
   const { data: rawTable, isLoading: loadingTable } = useSWR(
-    ['analytics-table', from, to, platform, appliedPath],
-    () => getVisitTable({ from, to, platform: platform || undefined, path: appliedPath || undefined }),
+    ['analytics-table', from, to, appliedPath],
+    () => getVisitTable({ from, to, path: appliedPath || undefined }),
   );
 
   const total          = stats?.total ?? 0;
   const uniqueVisitors = stats?.uniqueVisitors ?? 0;
-  const byPlatform: { platform: string; visits: number }[] = stats?.byPlatform ?? [];
   const timeline: TimelineRow[] = stats?.timeline ?? [];
 
   const maxVisits = useMemo(() => Math.max(...timeline.map((r: TimelineRow) => r.visits), 1), [timeline]);
@@ -132,22 +115,10 @@ export default function AnalyticsPage() {
       ),
     },
     {
-      title: 'Nền tảng',
-      dataIndex: 'platform',
-      key: 'platform',
-      width: 130,
-      filters: Object.entries(PLATFORM_LABELS).map(([value, { label }]) => ({ text: label, value })),
-      onFilter: (value, record) => record.platform === value,
-      render: (v: string) => {
-        const p = PLATFORM_LABELS[v] ?? { label: v, color: '#9ca3af' };
-        return <Tag color={p.color} style={{ color: '#fff', borderColor: p.color }}>{p.label}</Tag>;
-      },
-    },
-    {
       title: 'Lượt xem',
       dataIndex: 'visits',
       key: 'visits',
-      width: 120,
+      width: 140,
       sorter: (a, b) => a.visits - b.visits,
       defaultSortOrder: 'descend',
       render: (v: number) => <span className="font-semibold">{v.toLocaleString('vi-VN')}</span>,
@@ -156,7 +127,7 @@ export default function AnalyticsPage() {
       title: 'Unique users',
       dataIndex: 'uniqueVisitors',
       key: 'uniqueVisitors',
-      width: 130,
+      width: 140,
       sorter: (a, b) => a.uniqueVisitors - b.uniqueVisitors,
       render: (v: number) => <span className="text-blue-600 font-semibold">{v.toLocaleString('vi-VN')}</span>,
     },
@@ -168,20 +139,18 @@ export default function AnalyticsPage() {
         <BarChartOutlined className="mr-2" />Phân tích lượt truy cập
       </Title>
 
-      {/* Filters */}
+      {/* Date filter */}
       <Card size="small">
-        <Space wrap>
-          <RangePicker
-            value={[dayjs(from), dayjs(to)]}
-            onChange={v => {
-              if (v?.[0] && v?.[1]) {
-                setFrom(v[0].format('YYYY-MM-DD'));
-                setTo(v[1].format('YYYY-MM-DD'));
-              }
-            }}
-            allowClear={false}
-          />
-        </Space>
+        <RangePicker
+          value={[dayjs(from), dayjs(to)]}
+          onChange={v => {
+            if (v?.[0] && v?.[1]) {
+              setFrom(v[0].format('YYYY-MM-DD'));
+              setTo(v[1].format('YYYY-MM-DD'));
+            }
+          }}
+          allowClear={false}
+        />
       </Card>
 
       {/* Summary cards */}
@@ -220,33 +189,6 @@ export default function AnalyticsPage() {
         </Col>
       </Row>
 
-      {/* Platform breakdown */}
-      <Card title="Phân tích theo nền tảng" size="small">
-        <Spin spinning={loadingStats}>
-          <div className="space-y-2">
-            {byPlatform.map(row => {
-              const p = PLATFORM_LABELS[row.platform] ?? { label: row.platform, color: '#9ca3af' };
-              const pct = total > 0 ? Math.round((row.visits / total) * 100) : 0;
-              return (
-                <div key={row.platform} className="flex items-center gap-3">
-                  <Tag color={p.color} style={{ color: '#fff', borderColor: p.color, minWidth: 90, textAlign: 'center' }}>
-                    {p.label}
-                  </Tag>
-                  <Progress
-                    percent={pct}
-                    showInfo={false}
-                    style={{ flex: 1 }}
-                    strokeColor={p.color}
-                  />
-                  <span className="text-sm font-semibold w-12 text-right">{row.visits.toLocaleString('vi-VN')}</span>
-                  <span className="text-xs text-gray-400 w-10 text-right">{pct}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </Spin>
-      </Card>
-
       {/* Daily timeline */}
       <Card title="Lượt truy cập theo ngày" size="small">
         <Spin spinning={loadingStats}>
@@ -265,19 +207,13 @@ export default function AnalyticsPage() {
         title="Chi tiết theo trang"
         extra={
           <Space>
-            <Select
-              style={{ width: 160 }}
-              options={PLATFORM_OPTIONS}
-              value={platform}
-              onChange={v => setPlatform(v)}
-            />
             <Input
               placeholder="Tìm đường dẫn..."
               prefix={<SearchOutlined />}
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               onPressEnter={() => setAppliedPath(searchInput)}
-              style={{ width: 200 }}
+              style={{ width: 220 }}
               allowClear
               onClear={() => { setSearchInput(''); setAppliedPath(''); }}
             />
@@ -291,13 +227,13 @@ export default function AnalyticsPage() {
           <Table<TableRow>
             dataSource={rawTable ?? []}
             columns={tableColumns}
-            rowKey={r => `${r.path}__${r.platform}`}
+            rowKey="path"
             size="small"
-            scroll={{ x: 700 }}
+            scroll={{ x: 500 }}
             pagination={{
               pageSize: 20,
               showSizeChanger: true,
-              showTotal: t => `${t.toLocaleString('vi-VN')} dòng`,
+              showTotal: t => `${t.toLocaleString('vi-VN')} trang`,
             }}
           />
         </Spin>
