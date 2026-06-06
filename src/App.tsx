@@ -17,6 +17,8 @@ const OrderDetailPage     = lazy(() => import('@/features/orders/components/Orde
 const MediaPage           = lazy(() => import('@/features/media/components/MediaPage'));
 const SiteConfigPage      = lazy(() => import('@/features/site-config/components/SiteConfigPage'));
 const KeywordsPage        = lazy(() => import('@/features/keywords/components/KeywordsPage'));
+const AnalyticsPage       = lazy(() => import('@/features/analytics/components/AnalyticsPage'));
+const BusinessReportPage  = lazy(() => import('@/features/analytics/components/BusinessReportPage'));
 
 const Loader = () => (
   <div className="flex justify-center items-center h-64">
@@ -53,6 +55,8 @@ export default function App() {
           <Route path="/media"             element={<PrivateLayout><MediaPage /></PrivateLayout>} />
           <Route path="/site-config"       element={<PrivateLayout><SiteConfigPage /></PrivateLayout>} />
           <Route path="/keywords"          element={<PrivateLayout><KeywordsPage /></PrivateLayout>} />
+          <Route path="/analytics"         element={<PrivateLayout><AnalyticsPage /></PrivateLayout>} />
+          <Route path="/reports"           element={<PrivateLayout><BusinessReportPage /></PrivateLayout>} />
           <Route path="*"                  element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>

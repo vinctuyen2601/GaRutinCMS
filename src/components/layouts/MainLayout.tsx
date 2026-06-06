@@ -4,7 +4,7 @@ import {
   DashboardOutlined, ShoppingOutlined, FileTextOutlined,
   AppstoreOutlined, UnorderedListOutlined, PictureOutlined,
   SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  KeyOutlined,
+  KeyOutlined, BarChartOutlined, FundOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,8 @@ const MENU_ITEMS = [
   { key: '/orders',      icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
   { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
   { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
+  { key: '/analytics',   icon: <BarChartOutlined />,      label: 'Analytics' },
+  { key: '/reports',     icon: <FundOutlined />,          label: 'Báo cáo' },
   { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
 ];
 
