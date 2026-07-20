@@ -19,6 +19,8 @@ const SiteConfigPage      = lazy(() => import('@/features/site-config/components
 const KeywordsPage        = lazy(() => import('@/features/keywords/components/KeywordsPage'));
 const AnalyticsPage       = lazy(() => import('@/features/analytics/components/AnalyticsPage'));
 const BusinessReportPage  = lazy(() => import('@/features/analytics/components/BusinessReportPage'));
+const CustomersPage       = lazy(() => import('@/features/customers/components/CustomersPage'));
+const CustomerDetailPage  = lazy(() => import('@/features/customers/components/CustomerDetailPage'));
 
 const Loader = () => (
   <div className="flex justify-center items-center h-64">
@@ -57,6 +59,8 @@ export default function App() {
           <Route path="/keywords"          element={<PrivateLayout><KeywordsPage /></PrivateLayout>} />
           <Route path="/analytics"         element={<PrivateLayout><AnalyticsPage /></PrivateLayout>} />
           <Route path="/reports"           element={<PrivateLayout><BusinessReportPage /></PrivateLayout>} />
+          <Route path="/customers"         element={<PrivateLayout><CustomersPage /></PrivateLayout>} />
+          <Route path="/customers/:id"     element={<PrivateLayout><CustomerDetailPage /></PrivateLayout>} />
           <Route path="*"                  element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>

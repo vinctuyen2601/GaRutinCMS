@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Button, Avatar, Typography, theme, Drawer, Grid } from 'antd';
 import {
-  DashboardOutlined, ShoppingOutlined, FileTextOutlined,
-  AppstoreOutlined, UnorderedListOutlined, PictureOutlined,
-  SettingOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  KeyOutlined, BarChartOutlined, FundOutlined,
+  DashboardOutlined,
+  ShoppingOutlined,
+  FileTextOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
+  PictureOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  BarChartOutlined,
+  FundOutlined,
+  KeyOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,16 +24,17 @@ const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const MENU_ITEMS = [
-  { key: '/dashboard',   icon: <DashboardOutlined />,     label: 'Dashboard' },
-  { key: '/products',    icon: <ShoppingOutlined />,      label: 'Sản phẩm' },
-  { key: '/posts',       icon: <FileTextOutlined />,      label: 'Bài viết' },
-  { key: '/categories',  icon: <AppstoreOutlined />,      label: 'Danh mục' },
-  { key: '/orders',      icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
-  { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
-  { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
-  { key: '/analytics',   icon: <BarChartOutlined />,      label: 'Analytics' },
-  { key: '/reports',     icon: <FundOutlined />,          label: 'Báo cáo' },
-  { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
+  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+  { key: '/products', icon: <ShoppingOutlined />, label: 'Sản phẩm' },
+  { key: '/posts', icon: <FileTextOutlined />, label: 'Bài viết' },
+  { key: '/categories', icon: <AppstoreOutlined />, label: 'Danh mục' },
+  { key: '/orders', icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
+  { key: '/customers', icon: <TeamOutlined />, label: 'Khách hàng' },
+  { key: '/media', icon: <PictureOutlined />, label: 'Media' },
+  { key: '/keywords', icon: <KeyOutlined />, label: 'Keywords' },
+  { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+  { key: '/reports', icon: <FundOutlined />, label: 'Báo cáo' },
+  { key: '/site-config', icon: <SettingOutlined />, label: 'Cài đặt' },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -41,13 +52,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     navigate('/login');
   };
 
-  const selectedKey = MENU_ITEMS.find((i) => location.pathname.startsWith(i.key))?.key ?? '/dashboard';
+  const selectedKey =
+    MENU_ITEMS.find((i) => location.pathname.startsWith(i.key))?.key ?? '/dashboard';
 
   const menuContent = (showFull: boolean) => (
     <>
       <div
         className="flex items-center justify-center py-4 px-3 cursor-pointer"
-        onClick={() => { navigate('/dashboard'); if (isMobile) setMobileOpen(false); }}
+        onClick={() => {
+          navigate('/dashboard');
+          if (isMobile) setMobileOpen(false);
+        }}
       >
         {showFull ? (
           <img src="/logo.svg" alt="GaRutin" style={{ height: 38, maxWidth: 180 }} />
@@ -60,15 +75,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         theme="dark"
         mode="inline"
         selectedKeys={[selectedKey]}
-        onClick={({ key }) => { navigate(key); if (isMobile) setMobileOpen(false); }}
+        onClick={({ key }) => {
+          navigate(key);
+          if (isMobile) setMobileOpen(false);
+        }}
         items={MENU_ITEMS}
         style={{ background: '#14532d', borderRight: 0 }}
       />
 
       {showFull && (
-        <div className="absolute bottom-4 left-0 right-0 px-4 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div
+          className="absolute bottom-4 left-0 right-0 px-4 py-3 border-t"
+          style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+        >
           <div className="flex items-center gap-2">
-            <Avatar style={{ background: token.colorPrimary }}>{user?.email?.[0]?.toUpperCase()}</Avatar>
+            <Avatar style={{ background: token.colorPrimary }}>
+              {user?.email?.[0]?.toUpperCase()}
+            </Avatar>
             <Text className="text-white text-sm truncate">{user?.email}</Text>
           </div>
         </div>
@@ -84,7 +107,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           onClose={() => setMobileOpen(false)}
           placement="left"
           width={220}
-          styles={{ body: { padding: 0, background: '#14532d', position: 'relative' }, header: { display: 'none' } }}
+          styles={{
+            body: { padding: 0, background: '#14532d', position: 'relative' },
+            header: { display: 'none' },
+          }}
         >
           {menuContent(true)}
         </Drawer>
@@ -94,7 +120,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           collapsed={collapsed}
           trigger={null}
           width={220}
-          style={{ background: '#14532d', height: '100vh', position: 'sticky', top: 0, left: 0, overflow: 'auto' }}
+          style={{
+            background: '#14532d',
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            left: 0,
+            overflow: 'auto',
+          }}
         >
           {menuContent(!collapsed)}
         </Sider>
@@ -103,21 +136,34 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Layout>
         <Header
           className="flex items-center justify-between"
-          style={{ background: '#fff', borderBottom: `1px solid ${token.colorBorderSecondary}`, padding: '0 16px', position: 'sticky', top: 0, zIndex: 10 }}
+          style={{
+            background: '#fff',
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            padding: '0 16px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+          }}
         >
           <Button
             type="text"
-            icon={isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
-            onClick={() => isMobile ? setMobileOpen(true) : setCollapsed(!collapsed)}
+            icon={
+              isMobile ? (
+                <MenuUnfoldOutlined />
+              ) : collapsed ? (
+                <MenuUnfoldOutlined />
+              ) : (
+                <MenuFoldOutlined />
+              )
+            }
+            onClick={() => (isMobile ? setMobileOpen(true) : setCollapsed(!collapsed))}
           />
           <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>
             {!isMobile && 'Đăng xuất'}
           </Button>
         </Header>
 
-        <Content style={{ padding: isMobile ? 12 : 24, minWidth: 0 }}>
-          {children}
-        </Content>
+        <Content style={{ padding: isMobile ? 12 : 24, minWidth: 0 }}>{children}</Content>
 
         <Footer className="text-center text-gray-400 text-sm py-3">
           GaRutin CMS © {new Date().getFullYear()}

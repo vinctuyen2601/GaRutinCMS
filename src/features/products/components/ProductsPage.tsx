@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Table, Button, Tag, Popconfirm, Space, Typography, message, Image } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Tag, Popconfirm, Space, Typography, message, Image, Select, Input } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import type { Product } from '../types';
 import { getProducts, deleteProduct } from '../services';
+import { getCategories } from '@/features/categories/services';
 import { getApiError } from '@/lib/error';
 
 const { Title } = Typography;
@@ -20,7 +21,17 @@ const formatVND = (n: number) =>
 
 export default function ProductsPage() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+
   const { data: products = [], isLoading, mutate } = useSWR('admin-products', getProducts);
+  const { data: categories = [] } = useSWR('admin-categories', getCategories);
+
+  const filtered = products.filter((p) => {
+    const matchCat = !categoryFilter || p.categoryId === categoryFilter;
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
   const handleDelete = async (id: string) => {
     try {
@@ -108,14 +119,33 @@ export default function ProductsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Title level={4} className="!mb-0">Sản phẩm ({products.length})</Title>
+        <Title level={4} className="!mb-0">Sản phẩm ({filtered.length}/{products.length})</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/new')}>
           Thêm sản phẩm
         </Button>
       </div>
 
+      <div className="flex gap-3 flex-wrap">
+        <Input
+          placeholder="Tìm theo tên..."
+          prefix={<SearchOutlined />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          allowClear
+          style={{ width: 220 }}
+        />
+        <Select
+          placeholder="Lọc theo danh mục"
+          allowClear
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          style={{ width: 200 }}
+          options={categories.map((c) => ({ value: c.id, label: c.name }))}
+        />
+      </div>
+
       <Table
-        dataSource={products}
+        dataSource={filtered}
         columns={columns}
         rowKey="id"
         loading={isLoading}
