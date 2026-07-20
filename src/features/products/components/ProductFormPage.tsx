@@ -391,7 +391,7 @@ export default function ProductFormPage() {
             <Form.Item label="Nổi bật" name="isFeatured" valuePropName="checked">
               <Switch />
             </Form.Item>
-            <Form.Item label="Thứ tự" name="sortOrder">
+            <Form.Item label="Thứ tự" name="sortOrder" extra="Số càng lớn, sản phẩm càng hiển thị lên đầu">
               <InputNumber min={0} />
             </Form.Item>
           </div>

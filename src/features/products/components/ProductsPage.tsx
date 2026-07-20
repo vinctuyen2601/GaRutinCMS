@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Table, Button, Tag, Popconfirm, Space, Typography, message, Image, Select, Input } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { useState, useMemo } from 'react';
+import { Table, Button, Tag, Popconfirm, Space, Typography, message, Image, Select, Input, Switch } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import type { Product } from '../types';
-import { getProducts, deleteProduct } from '../services';
+import { getProducts, deleteProduct, updateProduct } from '../services';
 import { getCategories } from '@/features/categories/services';
 import { getApiError } from '@/lib/error';
 
@@ -23,6 +23,8 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   const { data: products = [], isLoading, mutate } = useSWR('admin-products', getProducts);
   const { data: categories = [] } = useSWR('admin-categories', getCategories);
@@ -32,6 +34,12 @@ export default function ProductsPage() {
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  // Trang chủ hiển thị sản phẩm nổi bật theo sort_order giảm dần (số càng lớn càng lên đầu)
+  const featuredList = useMemo(
+    () => products.filter((p) => p.isFeatured).sort((a, b) => b.sortOrder - a.sortOrder),
+    [products],
+  );
 
   const handleDelete = async (id: string) => {
     try {
@@ -43,7 +51,60 @@ export default function ProductsPage() {
     }
   };
 
+  // Kéo 1 sản phẩm lên/xuống trong danh sách nổi bật — gán lại thứ tự tuần tự cho
+  // toàn bộ danh sách hiển thị để đảm bảo luôn đổi vị trí thấy được, kể cả khi
+  // nhiều sản phẩm đang cùng giá trị sortOrder mặc định.
+  const moveFeatured = async (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= featuredList.length) return;
+
+    const reordered = [...featuredList];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    setReordering(true);
+    try {
+      const total = reordered.length;
+      await Promise.all(
+        reordered.map((p, i) => {
+          const newSortOrder = total - i;
+          if (p.sortOrder === newSortOrder) return null;
+          return updateProduct(p.id, { sortOrder: newSortOrder });
+        }),
+      );
+      await mutate();
+    } catch (e) {
+      message.error(getApiError(e, 'Cập nhật thứ tự thất bại'));
+    } finally {
+      setReordering(false);
+    }
+  };
+
   const columns = [
+    ...(featuredOnly
+      ? [
+          {
+            title: 'Vị trí',
+            key: 'position',
+            width: 90,
+            render: (_: unknown, __: Product, i: number) => (
+              <Space size={4}>
+                <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+                <Button
+                  type="text" size="small" icon={<ArrowUpOutlined />}
+                  disabled={i === 0 || reordering}
+                  onClick={() => moveFeatured(i, -1)}
+                />
+                <Button
+                  type="text" size="small" icon={<ArrowDownOutlined />}
+                  disabled={i === featuredList.length - 1 || reordering}
+                  onClick={() => moveFeatured(i, 1)}
+                />
+              </Space>
+            ),
+          },
+        ]
+      : []),
     {
       title: 'Ảnh',
       dataIndex: 'images',
@@ -119,19 +180,22 @@ export default function ProductsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Title level={4} className="!mb-0">Sản phẩm ({filtered.length}/{products.length})</Title>
+        <Title level={4} className="!mb-0">
+          Sản phẩm ({featuredOnly ? featuredList.length : `${filtered.length}/${products.length}`})
+        </Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/new')}>
           Thêm sản phẩm
         </Button>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         <Input
           placeholder="Tìm theo tên..."
           prefix={<SearchOutlined />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           allowClear
+          disabled={featuredOnly}
           style={{ width: 220 }}
         />
         <Select
@@ -139,17 +203,24 @@ export default function ProductsPage() {
           allowClear
           value={categoryFilter}
           onChange={setCategoryFilter}
+          disabled={featuredOnly}
           style={{ width: 200 }}
           options={categories.map((c) => ({ value: c.id, label: c.name }))}
         />
+        <div className="flex items-center gap-2 ml-auto">
+          <Switch checked={featuredOnly} onChange={setFeaturedOnly} />
+          <span className="text-sm text-gray-600">
+            Sắp xếp sản phẩm nổi bật {featuredOnly && <span className="text-gray-400">(kéo lên/xuống để đổi vị trí)</span>}
+          </span>
+        </div>
       </div>
 
       <Table
-        dataSource={filtered}
+        dataSource={featuredOnly ? featuredList : filtered}
         columns={columns}
         rowKey="id"
         loading={isLoading}
-        pagination={{ pageSize: 20 }}
+        pagination={featuredOnly ? false : { pageSize: 20 }}
         scroll={{ x: 700 }}
       />
     </div>

@@ -23,18 +23,58 @@ const { Sider, Header, Content, Footer } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
-const MENU_ITEMS = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-  { key: '/products', icon: <ShoppingOutlined />, label: 'Sản phẩm' },
-  { key: '/posts', icon: <FileTextOutlined />, label: 'Bài viết' },
-  { key: '/categories', icon: <AppstoreOutlined />, label: 'Danh mục' },
-  { key: '/orders', icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
-  { key: '/customers', icon: <TeamOutlined />, label: 'Khách hàng' },
-  { key: '/media', icon: <PictureOutlined />, label: 'Media' },
-  { key: '/keywords', icon: <KeyOutlined />, label: 'Keywords' },
-  { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
-  { key: '/reports', icon: <FundOutlined />, label: 'Báo cáo' },
-  { key: '/site-config', icon: <SettingOutlined />, label: 'Cài đặt' },
+// Flat list — used for the collapsed/mobile sidebar and for selectedKey lookup
+const LEAF_ITEMS = [
+  { key: '/dashboard',   icon: <DashboardOutlined />,     label: 'Dashboard' },
+  { key: '/analytics',   icon: <BarChartOutlined />,      label: 'Phân tích' },
+  { key: '/reports',     icon: <FundOutlined />,          label: 'Báo cáo' },
+  { key: '/orders',      icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
+  { key: '/customers',   icon: <TeamOutlined />,          label: 'Khách hàng' },
+  { key: '/products',    icon: <ShoppingOutlined />,      label: 'Sản phẩm' },
+  { key: '/categories',  icon: <AppstoreOutlined />,      label: 'Danh mục' },
+  { key: '/posts',       icon: <FileTextOutlined />,      label: 'Bài viết' },
+  { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
+  { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
+  { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
+];
+
+// Grouped list — used for the expanded sidebar
+const MENU_GROUPED = [
+  {
+    type: 'group' as const,
+    label: 'Tổng quan',
+    children: [
+      { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+      { key: '/analytics', icon: <BarChartOutlined />,  label: 'Phân tích' },
+      { key: '/reports',   icon: <FundOutlined />,      label: 'Báo cáo' },
+    ],
+  },
+  {
+    type: 'group' as const,
+    label: 'Bán hàng',
+    children: [
+      { key: '/orders',    icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
+      { key: '/customers', icon: <TeamOutlined />,          label: 'Khách hàng' },
+    ],
+  },
+  {
+    type: 'group' as const,
+    label: 'Nội dung',
+    children: [
+      { key: '/products',   icon: <ShoppingOutlined />, label: 'Sản phẩm' },
+      { key: '/categories', icon: <AppstoreOutlined />, label: 'Danh mục' },
+      { key: '/posts',      icon: <FileTextOutlined />, label: 'Bài viết' },
+      { key: '/keywords',   icon: <KeyOutlined />,      label: 'Keywords' },
+      { key: '/media',      icon: <PictureOutlined />,  label: 'Media' },
+    ],
+  },
+  {
+    type: 'group' as const,
+    label: 'Hệ thống',
+    children: [
+      { key: '/site-config', icon: <SettingOutlined />, label: 'Cài đặt' },
+    ],
+  },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +93,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   };
 
   const selectedKey =
-    MENU_ITEMS.find((i) => location.pathname.startsWith(i.key))?.key ?? '/dashboard';
+    LEAF_ITEMS.find((i) => location.pathname.startsWith(i.key))?.key ?? '/dashboard';
 
   const menuContent = (showFull: boolean) => (
     <>
@@ -79,7 +119,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           navigate(key);
           if (isMobile) setMobileOpen(false);
         }}
-        items={MENU_ITEMS}
+        items={showFull ? MENU_GROUPED : LEAF_ITEMS}
         style={{ background: '#14532d', borderRight: 0 }}
       />
 
