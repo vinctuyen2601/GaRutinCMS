@@ -57,6 +57,12 @@ export type GenerateContentResult = {
   tags: string[];
 };
 
+export type PostTemplate = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 export type OptimizeSeoPayload = {
   title: string;
   content: string;
@@ -64,6 +70,7 @@ export type OptimizeSeoPayload = {
   seoDescription?: string;
   slug?: string;
   tags?: string[];
+  templateId?: string;
 };
 
 export type OptimizeSeoResult = {
@@ -81,6 +88,7 @@ export type ImproveContentPayload = {
   category?: string;
   contentScore?: number;
   issues?: string[];
+  templateId?: string;
 };
 
 export type ImproveContentResult = {

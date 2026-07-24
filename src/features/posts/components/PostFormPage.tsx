@@ -43,6 +43,7 @@ import {
   aiGenerateContent,
   aiOptimizeSeo,
   aiImproveContent,
+  getPostTemplates,
 } from '../services';
 import { uploadMedia } from '../../media/services';
 import MediaPicker from '../../media/components/MediaPicker';
@@ -85,6 +86,9 @@ export default function PostFormPage() {
   const [aiLoading, setAiLoading] = useState<'generate' | 'seo' | 'improve' | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
+  const [templateId, setTemplateId] = useState<string | undefined>();
+
+  const { data: postTemplates = [] } = useSWR('post-templates', getPostTemplates);
 
   const handleGenerateFromUrl = async () => {
     if (!urlInput.trim()) {
@@ -204,6 +208,7 @@ export default function PostFormPage() {
         seoDescription: values.seoDescription,
         slug: values.slug,
         tags: values.tags,
+        templateId,
       });
       form.setFieldsValue({
         seoTitle: result.seoTitle,
@@ -247,6 +252,7 @@ export default function PostFormPage() {
         title: values.title,
         content: values.content,
         category: values.category,
+        templateId,
       });
       form.setFieldsValue({
         content: result.content,
@@ -298,6 +304,26 @@ export default function PostFormPage() {
             >
               Tạo từ URL
             </Button>
+          </Tooltip>
+          <Tooltip title="Chọn cấu trúc bài viết trước khi Tối ưu SEO / Cải thiện nội dung — tránh mọi bài viết ra cùng 1 khuôn (FAQ/CTA giống hệt nhau)">
+            <Select
+              size="small"
+              placeholder="Cấu trúc bài viết..."
+              allowClear
+              value={templateId}
+              onChange={setTemplateId}
+              style={{ minWidth: 200 }}
+              options={postTemplates.map((t) => ({ value: t.id, label: t.name }))}
+              optionRender={(opt) => {
+                const t = postTemplates.find((pt) => pt.id === opt.value);
+                return (
+                  <div>
+                    <div>{opt.label}</div>
+                    {t && <div className="text-xs text-gray-400">{t.description}</div>}
+                  </div>
+                );
+              }}
+            />
           </Tooltip>
           <Tooltip title="Tối ưu SEO title, description, slug, tags">
             <Button
