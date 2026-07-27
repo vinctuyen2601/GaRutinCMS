@@ -45,6 +45,19 @@ export default function OrdersPage() {
     { title: 'Mã đơn', dataIndex: 'orderNumber', key: 'orderNumber', render: (v: string, r: Order) => <a onClick={() => navigate(`/orders/${r.id}`)}>{v}</a> },
     { title: 'Khách hàng', dataIndex: 'customerName', key: 'customerName' },
     { title: 'SĐT', dataIndex: 'customerPhone', key: 'customerPhone' },
+    {
+      title: 'Sản phẩm',
+      key: 'items',
+      render: (_: unknown, r: Order) => {
+        const extra = r.items.length - 1;
+        return (
+          <span className="text-xs">
+            {r.items[0]?.name ?? '—'}
+            {extra > 0 && <span className="text-gray-400"> +{extra} khác</span>}
+          </span>
+        );
+      },
+    },
     { title: 'Tổng tiền', dataIndex: 'totalAmount', key: 'totalAmount', render: (v: number) => formatVND(v) },
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (s: OrderStatus) => <Tag color={STATUS_CFG[s]?.color}>{STATUS_CFG[s]?.label}</Tag> },
     { title: 'Nguồn', dataIndex: 'source', key: 'source', render: (s: string) => SOURCE_LABELS[s] ?? s },
