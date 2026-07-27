@@ -1,18 +1,44 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Card, DatePicker, Row, Col, Table, Typography, Statistic, Spin,
-  Input, Button, Space, Progress,
+  Input, Button, Space,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   BarChartOutlined, EyeOutlined, UserOutlined, RiseOutlined, SearchOutlined,
 } from '@ant-design/icons';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
 import { getVisitStats, getVisitTable } from '../services';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
+
+const GREEN = '#16a34a';
+const BLUE = '#2563eb';
+const MUTED = '#898781';
+const GRID = '#e1e0d9';
+
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white shadow-lg rounded-md border border-gray-100 px-3 py-2 text-xs">
+      <div className="font-medium text-gray-500 mb-1">{dayjs(label).format('DD/MM/YYYY')}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+          <span className="text-gray-500">{p.name}:</span>
+          <span className="font-semibold">
+            {typeof p.value === 'number' ? p.value.toLocaleString('vi-VN') : p.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface TimelineRow {
   date: string;
@@ -48,54 +74,6 @@ export default function AnalyticsPage() {
   const total          = stats?.total ?? 0;
   const uniqueVisitors = stats?.uniqueVisitors ?? 0;
   const timeline: TimelineRow[] = stats?.timeline ?? [];
-
-  const maxVisits = useMemo(() => Math.max(...timeline.map((r: TimelineRow) => r.visits), 1), [timeline]);
-
-  const timelineColumns: ColumnsType<TimelineRow> = [
-    {
-      title: 'Ngày',
-      dataIndex: 'date',
-      key: 'date',
-      width: 120,
-      render: (v: string) => <span className="font-mono text-xs">{v}</span>,
-    },
-    {
-      title: 'Lượt xem',
-      dataIndex: 'visits',
-      key: 'visits',
-      sorter: (a, b) => a.visits - b.visits,
-      render: (v: number) => (
-        <div className="flex items-center gap-2">
-          <Progress
-            percent={Math.round((v / maxVisits) * 100)}
-            showInfo={false}
-            size="small"
-            style={{ width: 80 }}
-            strokeColor="#16a34a"
-          />
-          <span className="font-semibold text-sm">{v.toLocaleString('vi-VN')}</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Unique users',
-      dataIndex: 'uniqueVisitors',
-      key: 'uniqueVisitors',
-      sorter: (a, b) => a.uniqueVisitors - b.uniqueVisitors,
-      render: (v: number) => (
-        <div className="flex items-center gap-2">
-          <Progress
-            percent={Math.round((v / maxVisits) * 100)}
-            showInfo={false}
-            size="small"
-            style={{ width: 80 }}
-            strokeColor="#2563eb"
-          />
-          <span className="font-semibold text-sm text-blue-600">{v.toLocaleString('vi-VN')}</span>
-        </div>
-      ),
-    },
-  ];
 
   const tableColumns: ColumnsType<TableRow> = [
     {
@@ -192,13 +170,24 @@ export default function AnalyticsPage() {
       {/* Daily timeline */}
       <Card title="Lượt truy cập theo ngày" size="small">
         <Spin spinning={loadingStats}>
-          <Table<TimelineRow>
-            dataSource={[...timeline].reverse()}
-            columns={timelineColumns}
-            rowKey="date"
-            size="small"
-            pagination={{ pageSize: 14, showSizeChanger: false }}
-          />
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={timeline} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d) => dayjs(d).format('DD/MM')}
+                tick={{ fontSize: 11, fill: MUTED }}
+                axisLine={{ stroke: '#c3c2b7' }}
+                tickLine={false}
+                minTickGap={24}
+              />
+              <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} width={40} />
+              <Tooltip content={<ChartTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
+              <Line type="monotone" dataKey="visits" name="Lượt xem" stroke={GREEN} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="uniqueVisitors" name="Unique visitors" stroke={BLUE} strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
         </Spin>
       </Card>
 
