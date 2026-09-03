@@ -41,6 +41,7 @@ export default function ProductFormPage() {
   const [seoSuggestions, setSeoSuggestions] = useState<string[]>([]);
   const [improvements, setImprovements] = useState<string[]>([]);
   const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
   const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
 
   const handleScore = () => {
@@ -169,6 +170,37 @@ export default function ProductFormPage() {
       message.error(getApiError(err, 'Upload thất bại'));
     } finally {
       setImageUploading(false);
+    }
+    return false;
+  };
+
+  /** Khớp với giới hạn của máy chủ (MediaController.TOI_DA). */
+  const VIDEO_TOI_DA_MB = 25;
+
+  /**
+   * Tải clip ngắn lên thẳng từ form sản phẩm.
+   *
+   * Chặn dung lượng ngay tại trình duyệt thay vì để máy chủ từ chối: video là
+   * tệp nặng, để người dùng chờ tải xong vài chục megabyte rồi mới báo "quá
+   * lớn" là phí thời gian của họ và phí băng thông.
+   */
+  const handleVideoUpload = async (file: File) => {
+    if (file.size > VIDEO_TOI_DA_MB * 1024 * 1024) {
+      message.error(
+        `Tệp ${Math.round(file.size / 1024 / 1024)} MB, vượt quá ${VIDEO_TOI_DA_MB} MB. ` +
+          'Video dài nên đăng YouTube rồi dán link vào ô này.',
+      );
+      return false;
+    }
+    setVideoUploading(true);
+    try {
+      const res = await uploadMedia(file);
+      form.setFieldValue('videoUrl', res.url);
+      message.success('Đã upload video');
+    } catch (err) {
+      message.error(getApiError(err, 'Upload thất bại'));
+    } finally {
+      setVideoUploading(false);
     }
     return false;
   };
@@ -327,10 +359,17 @@ export default function ProductFormPage() {
           <Form.Item
             label="Video sản phẩm"
             name="videoUrl"
-            extra="Link YouTube, hoặc đường dẫn clip ngắn đã tải ở mục Ảnh & video. Có video thì video thay ảnh chính ở trang sản phẩm."
+            extra="Dán link YouTube, hoặc tải clip ngắn (dưới 25 MB) lên. Có video thì video thay ảnh chính ở trang sản phẩm."
           >
             <Input placeholder="https://youtube.com/watch?v=... — để trống nếu chưa có" allowClear />
           </Form.Item>
+          <div className="-mt-2 mb-4">
+            <Upload beforeUpload={handleVideoUpload} showUploadList={false} accept="video/*" disabled={videoUploading}>
+              <Button size="small" icon={<UploadOutlined />} loading={videoUploading}>
+                Upload video
+              </Button>
+            </Upload>
+          </div>
 
           {/* Images */}
           <Form.Item label="Ảnh sản phẩm" name="images">
