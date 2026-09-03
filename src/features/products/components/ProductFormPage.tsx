@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import {
   ArrowLeftOutlined, SaveOutlined, ThunderboltOutlined,
-  RocketOutlined, BulbOutlined, CheckCircleOutlined, UploadOutlined, StarOutlined,
+  RocketOutlined, BulbOutlined, CheckCircleOutlined, UploadOutlined, PlayCircleFilled, StarOutlined,
 } from '@ant-design/icons';
 import { analyzeProduct } from '@/lib/content-analyzer';
 import type { AnalysisResult } from '@/lib/content-analyzer';
@@ -22,6 +22,7 @@ import MediaPicker from '../../media/components/MediaPicker';
 import { getApiError } from '@/lib/error';
 import api from '@/lib/axios';
 import { UPLOAD_MAX_MB, quaLon } from '@/lib/upload';
+import { youtubeId } from '@/features/gallery/lib';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -43,6 +44,7 @@ export default function ProductFormPage() {
   const [improvements, setImprovements] = useState<string[]>([]);
   const [imageUploading, setImageUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
+  const [linkVideo, setLinkVideo] = useState('');
   const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
 
   const handleScore = () => {
@@ -183,6 +185,21 @@ export default function ProductFormPage() {
    * tệp nặng, để người dùng chờ tải xong vài chục megabyte rồi mới báo "quá
    * lớn" là phí thời gian của họ và phí băng thông.
    */
+  /**
+   * Thêm một video vào danh sách, bỏ qua nếu đã có.
+   *
+   * Trùng lặp không báo lỗi mà chỉ lặng lẽ không thêm: chủ trại dán nhầm hai
+   * lần cùng một link là chuyện thường, mà một video hiện hai lần trong
+   * gallery thì trông như lỗi.
+   */
+  const themVideo = (url: string) => {
+    const sach = url.trim();
+    if (!sach) return;
+    const hienCo: string[] = form.getFieldValue('videos') ?? [];
+    if (hienCo.includes(sach)) return;
+    form.setFieldValue('videos', [...hienCo, sach]);
+  };
+
   const handleVideoUpload = async (file: File) => {
     const loiKichThuoc = quaLon(file);
     if (loiKichThuoc) {
@@ -192,7 +209,7 @@ export default function ProductFormPage() {
     setVideoUploading(true);
     try {
       const res = await uploadMedia(file);
-      form.setFieldValue('videoUrl', res.url);
+      themVideo(res.url);
       message.success('Đã upload video');
     } catch (err) {
       message.error(getApiError(err, 'Upload thất bại'));
@@ -353,20 +370,80 @@ export default function ProductFormPage() {
             <TextArea rows={5} placeholder="Mô tả chi tiết sản phẩm..." />
           </Form.Item>
 
+          {/* Videos */}
           <Form.Item
             label="Video sản phẩm"
-            name="videoUrl"
-            extra="Dán link YouTube, hoặc tải clip ngắn (dưới 25 MB) lên. Có video thì video thay ảnh chính ở trang sản phẩm."
+            name="videos"
+            extra="Video hiện TRƯỚC ảnh ở trang sản phẩm. Dán link YouTube hoặc tải clip ngắn lên."
           >
-            <Input placeholder="https://youtube.com/watch?v=... — để trống nếu chưa có" allowClear />
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const videos: string[] = form.getFieldValue('videos') ?? [];
+                return (
+                  <div className="space-y-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {videos.map((url: string, i: number) => {
+                        const yt = youtubeId(url);
+                        return (
+                          <div key={i} className="relative group" style={{ width: 90, height: 90 }}>
+                            {/* YouTube có ảnh đại diện sẵn; tệp tự lưu thì để trình duyệt
+                                dựng khung hình đầu, preload="metadata" nên không tải cả tệp. */}
+                            {yt ? (
+                              <img
+                                src={`https://img.youtube.com/vi/${yt}/mqdefault.jpg`}
+                                alt={`video-${i}`}
+                                style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid #e5e7eb' }}
+                              />
+                            ) : (
+                              <video
+                                src={url}
+                                muted
+                                preload="metadata"
+                                style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid #e5e7eb', background: '#000' }}
+                              />
+                            )}
+                            <PlayCircleFilled
+                              className="absolute text-white pointer-events-none"
+                              style={{ left: 33, top: 33, fontSize: 24, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.6))' }}
+                            />
+                            <Button
+                              danger
+                              size="small"
+                              className="absolute top-0 right-0 opacity-0 group-hover:opacity-100"
+                              style={{ padding: '0 4px', minWidth: 'auto', lineHeight: 1 }}
+                              onClick={() => form.setFieldValue('videos', videos.filter((_, idx) => idx !== i))}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Space.Compact style={{ width: '100%', maxWidth: 460 }}>
+                      <Input
+                        value={linkVideo}
+                        onChange={(e) => setLinkVideo(e.target.value)}
+                        onPressEnter={() => { themVideo(linkVideo); setLinkVideo(''); }}
+                        placeholder="Dán link YouTube rồi bấm Thêm"
+                      />
+                      <Button onClick={() => { themVideo(linkVideo); setLinkVideo(''); }}>Thêm</Button>
+                    </Space.Compact>
+                    <div>
+                      <Space>
+                        <Upload accept="video/*" showUploadList={false} beforeUpload={handleVideoUpload} disabled={videoUploading}>
+                          <Button size="small" icon={<UploadOutlined />} loading={videoUploading}>
+                            Upload video
+                          </Button>
+                        </Upload>
+                        <MediaPicker kind="video" onSelect={themVideo} name={form.getFieldValue('name')} />
+                      </Space>
+                    </div>
+                  </div>
+                );
+              }}
+            </Form.Item>
           </Form.Item>
-          <div className="-mt-2 mb-4">
-            <Upload beforeUpload={handleVideoUpload} showUploadList={false} accept="video/*" disabled={videoUploading}>
-              <Button size="small" icon={<UploadOutlined />} loading={videoUploading}>
-                Upload video
-              </Button>
-            </Upload>
-          </div>
+
 
           {/* Images */}
           <Form.Item label="Ảnh sản phẩm" name="images">

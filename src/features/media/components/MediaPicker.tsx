@@ -9,14 +9,29 @@ import type { MediaFile } from '../types';
 type Props = {
   onSelect: (url: string) => void;
   name?: string; // tên sản phẩm/bài viết — dùng để đặt tên file SEO-friendly
+  /**
+   * Loại tệp cho chọn. Mặc định 'image' để mọi chỗ đang dùng giữ nguyên hành vi.
+   *
+   * Cần tách vì thư viện nay chứa cả ảnh lẫn video: chọn video cho sản phẩm mà
+   * hiện lẫn hàng chục ảnh thì phải tự lọc bằng mắt, còn chọn nhầm một tệp ảnh
+   * làm video thì trang sản phẩm hiện khung đen không báo lỗi gì.
+   */
+  kind?: 'image' | 'video';
 };
 
-export default function MediaPicker({ onSelect, name }: Props) {
+export default function MediaPicker({ onSelect, name, kind = 'image' }: Props) {
+  const laVideo = kind === 'video';
+  const nhan = laVideo ? 'video' : 'ảnh';
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const { data: files = [], isLoading, mutate } = useSWR(open ? 'media-files' : null, getMediaFiles);
+  const { data: tatCa = [], isLoading, mutate } = useSWR(open ? 'media-files' : null, getMediaFiles);
+  // Lọc theo mimeType do máy chủ ghi lúc tải lên, không đoán theo đuôi tệp:
+  // tệp tải từ nơi khác về có thể không có đuôi.
+  const files = tatCa.filter((f: MediaFile) =>
+    laVideo ? f.mimeType?.startsWith('video/') : f.mimeType?.startsWith('image/'),
+  );
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -58,20 +73,20 @@ export default function MediaPicker({ onSelect, name }: Props) {
         open={open}
         onCancel={() => { setOpen(false); setSelected(null); }}
         onOk={handleOk}
-        okText="Chọn ảnh này"
+        okText={`Chọn ${nhan} này`}
         cancelText="Hủy"
         okButtonProps={{ disabled: !selected, icon: <CheckOutlined /> }}
         width={800}
       >
         <div className="mb-3">
           <Upload
-            accept="image/*"
+            accept={laVideo ? 'video/*' : 'image/*'}
             showUploadList={false}
             beforeUpload={handleUpload}
             disabled={uploading}
           >
             <Button size="small" icon={<UploadOutlined />} loading={uploading}>
-              Upload ảnh mới
+              Upload {nhan} mới
             </Button>
           </Upload>
         </div>
@@ -79,7 +94,7 @@ export default function MediaPicker({ onSelect, name }: Props) {
         {isLoading ? (
           <div className="text-center py-10"><Spin /></div>
         ) : files.length === 0 ? (
-          <Empty description="Chưa có ảnh nào" />
+          <Empty description={`Chưa có ${nhan} nào`} />
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-96 overflow-y-auto pr-1">
             {files.map((file: MediaFile) => (
@@ -92,11 +107,22 @@ export default function MediaPicker({ onSelect, name }: Props) {
                   background: '#f5f5f5',
                 }}
               >
-                <img
-                  src={file.url}
-                  alt={file.originalName}
-                  style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
-                />
+                {laVideo ? (
+                  // preload="metadata": đủ để trình duyệt dựng khung hình đầu
+                  // làm ảnh xem trước, không tải cả tệp.
+                  <video
+                    src={file.url}
+                    muted
+                    preload="metadata"
+                    style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <img
+                    src={file.url}
+                    alt={file.originalName}
+                    style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+                  />
+                )}
                 {selected === file.url && (
                   <div className="absolute inset-0 bg-blue-500 bg-opacity-30 flex items-center justify-center">
                     <Tag color="blue" icon={<CheckOutlined />} className="m-0">Đã chọn</Tag>
