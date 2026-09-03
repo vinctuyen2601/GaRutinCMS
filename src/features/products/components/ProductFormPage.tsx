@@ -324,6 +324,14 @@ export default function ProductFormPage() {
             <TextArea rows={5} placeholder="Mô tả chi tiết sản phẩm..." />
           </Form.Item>
 
+          <Form.Item
+            label="Video sản phẩm"
+            name="videoUrl"
+            extra="Link YouTube, hoặc đường dẫn clip ngắn đã tải ở mục Ảnh & video. Có video thì video thay ảnh chính ở trang sản phẩm."
+          >
+            <Input placeholder="https://youtube.com/watch?v=... — để trống nếu chưa có" allowClear />
+          </Form.Item>
+
           {/* Images */}
           <Form.Item label="Ảnh sản phẩm" name="images">
             <Form.Item noStyle shouldUpdate>

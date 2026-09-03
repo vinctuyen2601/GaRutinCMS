@@ -7,6 +7,7 @@ import {
   AppstoreOutlined,
   UnorderedListOutlined,
   PictureOutlined,
+  VideoCameraOutlined,
   SettingOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -35,6 +36,7 @@ const LEAF_ITEMS = [
   { key: '/posts',       icon: <FileTextOutlined />,      label: 'Bài viết' },
   { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
   { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
+  { key: '/gallery',     icon: <VideoCameraOutlined />,   label: 'Ảnh & video' },
   { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
 ];
 
@@ -66,6 +68,7 @@ const MENU_GROUPED = [
       { key: '/posts',      icon: <FileTextOutlined />, label: 'Bài viết' },
       { key: '/keywords',   icon: <KeyOutlined />,      label: 'Keywords' },
       { key: '/media',      icon: <PictureOutlined />,  label: 'Media' },
+      { key: '/gallery',    icon: <VideoCameraOutlined />, label: 'Ảnh & video' },
     ],
   },
   {
