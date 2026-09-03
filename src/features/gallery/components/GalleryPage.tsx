@@ -11,11 +11,10 @@ import { getGalleryItems, createGalleryItem, updateGalleryItem, deleteGalleryIte
 import { anhDaiDien, youtubeId } from '../lib';
 import { uploadMedia } from '@/features/media/services';
 import { getApiError } from '@/lib/error';
+import { UPLOAD_MAX_MB, quaLon } from '@/lib/upload';
 
 const { Title, Text } = Typography;
 
-/** Khớp với giới hạn của máy chủ (MediaController.TOI_DA). */
-const TOI_DA_MB = 25;
 
 export default function GalleryPage() {
   const { data: items = [], isLoading, mutate } = useSWR('admin-gallery', getGalleryItems);
@@ -79,11 +78,9 @@ export default function GalleryPage() {
   };
 
   const taiLen = async (file: File) => {
-    if (file.size > TOI_DA_MB * 1024 * 1024) {
-      message.error(
-        `Tệp ${Math.round(file.size / 1024 / 1024)} MB, vượt quá ${TOI_DA_MB} MB. ` +
-          'Video dài nên đăng YouTube rồi dán link vào đây.',
-      );
+    const loiKichThuoc = quaLon(file);
+    if (loiKichThuoc) {
+      message.error(loiKichThuoc);
       return false;
     }
     setDangTai(true);
@@ -242,7 +239,7 @@ export default function GalleryPage() {
             rules={[{ required: true, message: 'Dán link hoặc tải tệp lên' }]}
             extra={
               loaiDangChon === 'video'
-                ? 'Dán link YouTube, hoặc tải clip ngắn (dưới ' + TOI_DA_MB + ' MB) lên.'
+                ? `Dán link YouTube, hoặc tải clip ngắn (dưới ${UPLOAD_MAX_MB} MB) lên.`
                 : undefined
             }
           >

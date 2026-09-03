@@ -23,6 +23,7 @@ import useSWR from 'swr';
 import { uploadMedia, getMediaFiles, deleteMediaFile } from '../services';
 import { getApiError } from '@/lib/error';
 import type { MediaFile } from '../types';
+import { UPLOAD_ACCEPT, UPLOAD_HINT, quaLon } from '@/lib/upload';
 
 const { Title, Text } = Typography;
 
@@ -37,6 +38,10 @@ export default function MediaPage() {
   const { data: files = [], isLoading, mutate } = useSWR('media-files', getMediaFiles);
 
   const handleUpload = async (file: File) => {
+
+    const loi = quaLon(file);
+
+    if (loi) { message.error(loi); return false; }
     setUploading(true);
     try {
       await uploadMedia(file);
@@ -77,7 +82,7 @@ export default function MediaPage() {
 
       <Card>
         <Upload.Dragger
-          accept="image/*"
+          accept={UPLOAD_ACCEPT}
           showUploadList={false}
           beforeUpload={handleUpload}
           disabled={uploading}
@@ -86,9 +91,9 @@ export default function MediaPage() {
           <p className="ant-upload-drag-icon">
             <UploadOutlined style={{ fontSize: 40, color: '#16a34a' }} />
           </p>
-          <p className="ant-upload-text">Kéo thả ảnh vào đây hoặc click để chọn</p>
+          <p className="ant-upload-text">Kéo thả ảnh hoặc video vào đây, hoặc click để chọn</p>
           <p className="ant-upload-hint text-gray-400">
-            Hỗ trợ JPG, PNG, WebP, GIF. Tối đa 10MB mỗi file.
+            {UPLOAD_HINT}
           </p>
         </Upload.Dragger>
         {uploading && (

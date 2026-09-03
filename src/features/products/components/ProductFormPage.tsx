@@ -21,6 +21,7 @@ import { uploadMedia } from '../../media/services';
 import MediaPicker from '../../media/components/MediaPicker';
 import { getApiError } from '@/lib/error';
 import api from '@/lib/axios';
+import { UPLOAD_MAX_MB, quaLon } from '@/lib/upload';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -174,8 +175,6 @@ export default function ProductFormPage() {
     return false;
   };
 
-  /** Khớp với giới hạn của máy chủ (MediaController.TOI_DA). */
-  const VIDEO_TOI_DA_MB = 25;
 
   /**
    * Tải clip ngắn lên thẳng từ form sản phẩm.
@@ -185,11 +184,9 @@ export default function ProductFormPage() {
    * lớn" là phí thời gian của họ và phí băng thông.
    */
   const handleVideoUpload = async (file: File) => {
-    if (file.size > VIDEO_TOI_DA_MB * 1024 * 1024) {
-      message.error(
-        `Tệp ${Math.round(file.size / 1024 / 1024)} MB, vượt quá ${VIDEO_TOI_DA_MB} MB. ` +
-          'Video dài nên đăng YouTube rồi dán link vào ô này.',
-      );
+    const loiKichThuoc = quaLon(file);
+    if (loiKichThuoc) {
+      message.error(loiKichThuoc);
       return false;
     }
     setVideoUploading(true);
