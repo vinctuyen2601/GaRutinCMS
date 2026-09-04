@@ -409,7 +409,7 @@ export default function AnalyticsPage() {
         size="small"
         extra={
           <span className="text-xs text-gray-400">
-            Số liệu tính từ lúc bật đo hành vi, không có dữ liệu cũ
+            Ẩn sản phẩm chưa có hoạt động nào · số liệu tính từ lúc bật đo hành vi
           </span>
         }
       >
@@ -428,7 +428,9 @@ export default function AnalyticsPage() {
             • <b>Thêm giỏ nhiều, vào đặt hàng ít</b> → khách nhìn tổng tiền trong giỏ rồi đổi ý: vướng ở giá.<br />
             • <b>Vào đặt hàng rồi vẫn không thành đơn</b> → vướng ở chính khâu đặt hàng.<br />
             Cột <b>Đã bán</b> đếm từ đơn hàng thật. <b>Tỉ lệ mua</b> chỉ tính đơn đặt qua web —
-            đơn chốt qua Zalo hoặc điện thoại không được tính vào đây.
+            đơn chốt qua Zalo hoặc điện thoại không được tính vào đây.<br />
+            Sản phẩm không ai xem <i>và</i> không bán được món nào thì được ẩn khỏi bảng. Sản phẩm
+            có bán nhưng chưa ai xem vẫn hiện — đó thường là đơn chốt qua Zalo.
           </div>
         </Spin>
       </Card>
