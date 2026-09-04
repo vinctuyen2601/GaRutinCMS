@@ -44,11 +44,22 @@ export default function ProductsPage() {
   const { data: products = [], isLoading, mutate } = useSWR('admin-products', getProducts);
   const { data: categories = [] } = useSWR('admin-categories', getCategories);
 
-  const filtered = products.filter((p) => {
-    const matchCat = !categoryFilter || p.categoryId === categoryFilter;
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  // Sản phẩm đang ẩn xếp xuống cuối danh sách.
+  //
+  // Hàng ẩn không lên web nên hầu như không phải việc cần làm hằng ngày; để
+  // chúng nằm xen giữa thì mỗi lần tìm một món đang bán đều phải đọc lướt qua.
+  //
+  // Array.prototype.sort của JavaScript ổn định (chuẩn ES2019 trở đi), nên thứ
+  // tự sẵn có trong từng nhóm giữ nguyên như máy chủ trả về — chỉ tách hai
+  // nhóm, không xáo trộn gì thêm. `.filter()` đã tạo mảng mới nên `.sort()`
+  // không đụng vào dữ liệu gốc.
+  const filtered = products
+    .filter((p) => {
+      const matchCat = !categoryFilter || p.categoryId === categoryFilter;
+      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+      return matchCat && matchSearch;
+    })
+    .sort((a, b) => Number(b.isActive) - Number(a.isActive));
 
   // Trang chủ hiển thị sản phẩm nổi bật theo sort_order giảm dần (số càng lớn càng lên đầu)
   const featuredList = useMemo(
