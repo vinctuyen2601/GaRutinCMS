@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Layout, Menu, Button, Avatar, Typography, theme, Drawer, Grid } from 'antd';
 import {
   DashboardOutlined,
+  BellOutlined,
   ShoppingOutlined,
   FileTextOutlined,
   AppstoreOutlined,
@@ -37,6 +38,7 @@ const LEAF_ITEMS = [
   { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
   { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
   { key: '/gallery',     icon: <VideoCameraOutlined />,   label: 'Ảnh & video' },
+  { key: '/notifications', icon: <BellOutlined />,        label: 'Thông báo' },
   { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
 ];
 
@@ -75,6 +77,7 @@ const MENU_GROUPED = [
     type: 'group' as const,
     label: 'Hệ thống',
     children: [
+      { key: '/notifications', icon: <BellOutlined />, label: 'Thông báo' },
       { key: '/site-config', icon: <SettingOutlined />, label: 'Cài đặt' },
     ],
   },
