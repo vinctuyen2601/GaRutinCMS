@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Card, DatePicker, Row, Col, Table, Typography, Statistic, Spin,
-  Input, Button, Space,
+  Input, Button, Space, Tooltip as Tip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
-import { getVisitStats, getVisitTable, getHourStats } from '../services';
+import { getVisitStats, getVisitTable, getHourStats, getProductFunnel } from '../services';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -25,6 +25,143 @@ const GRID = '#e1e0d9';
 
 /** Tên gọi dân dã cho từng khung bốn tiếng, để chủ trại đọc bảng không phải nhẩm. */
 const BUOI = ['đêm', 'sáng sớm', 'buổi sáng', 'đầu chiều', 'cuối chiều', 'buổi tối'];
+
+/**
+ * Số khách tối thiểu để một tỉ lệ phần trăm nói được điều gì.
+ *
+ * Bên 17Fishing dùng 100. Trại này lưu lượng nhỏ hơn nhiều, để 100 thì gần như
+ * mọi dòng đều mờ và có dấu sao — bảng mất tác dụng. 30 là mức thấp nhất còn
+ * đọc được: dưới đó, một người mua thêm là tỉ lệ nhảy vài phần trăm.
+ */
+const TOI_THIEU_MAU = 30;
+
+interface ProductFunnelRow {
+  slug: string;
+  name: string;
+  viewers: number;
+  cartEvents: number;
+  carters: number;
+  checkouters: number;
+  quantitySold: number;
+  orders: number;
+  buyers: number;
+  revenue: number;
+}
+
+/** Tỉ lệ phần trăm, tô đỏ khi thấp và mờ đi khi mẫu quá nhỏ để kết luận. */
+function TiLe({ value, mau, nguong, goiY }: {
+  value: number; mau: number; nguong: number; goiY: string;
+}) {
+  if (mau === 0) return <span style={{ color: '#d9d9d9' }}>—</span>;
+  const pct = (value / mau) * 100;
+  if (mau < TOI_THIEU_MAU) {
+    return (
+      <Tip title={`Mới ${mau} khách — quá ít để kết luận. Cần khoảng ${TOI_THIEU_MAU} khách.`}>
+        <span style={{ color: '#bfbfbf' }}>{pct.toFixed(1)}%*</span>
+      </Tip>
+    );
+  }
+  const yeu = pct < nguong;
+  return (
+    <Tip title={yeu ? goiY : 'Ổn'}>
+      <span style={{ color: yeu ? '#cf1322' : '#389e0d', fontWeight: 600, cursor: 'help' }}>
+        {pct.toFixed(1)}%
+      </span>
+    </Tip>
+  );
+}
+
+const WEB_URL = 'https://garutin.com';
+
+const COT_PHEU: ColumnsType<ProductFunnelRow> = [
+  {
+    title: 'Sản phẩm',
+    dataIndex: 'name',
+    ellipsis: true,
+    render: (v: string, r) => (
+      <a href={`${WEB_URL}/san-pham/${r.slug}`} target="_blank" rel="noreferrer">{v}</a>
+    ),
+  },
+  {
+    title: 'Khách xem',
+    dataIndex: 'viewers',
+    align: 'right',
+    width: 100,
+    sorter: (a, b) => a.viewers - b.viewers,
+    defaultSortOrder: 'descend',
+    render: (v: number) => v.toLocaleString('vi-VN'),
+  },
+  {
+    title: 'Thêm giỏ',
+    dataIndex: 'carters',
+    align: 'right',
+    width: 100,
+    sorter: (a, b) => a.carters - b.carters,
+    render: (v: number, r) => (
+      <Tip title={`${r.cartEvents} lượt bấm, từ ${v} khách khác nhau`}>
+        <span style={{ cursor: 'help' }}>{v.toLocaleString('vi-VN')}</span>
+      </Tip>
+    ),
+  },
+  {
+    title: 'Tỉ lệ thêm giỏ',
+    key: 'tiLeThemGio',
+    align: 'right',
+    width: 130,
+    sorter: (a, b) => (a.viewers ? a.carters / a.viewers : 0) - (b.viewers ? b.carters / b.viewers : 0),
+    render: (_: unknown, r) => (
+      <TiLe value={r.carters} mau={r.viewers} nguong={10}
+        goiY="Ít người bấm thêm giỏ — thường do ảnh chưa đẹp, mô tả sơ sài, giá cao hơn mặt bằng, hoặc đang hết hàng." />
+    ),
+  },
+  {
+    title: 'Vào đặt hàng',
+    dataIndex: 'checkouters',
+    align: 'right',
+    width: 120,
+    sorter: (a, b) => a.checkouters - b.checkouters,
+    render: (v: number, r) => (
+      <Tip title={r.carters > 0
+        ? `${v}/${r.carters} khách đã thêm giỏ mang sản phẩm này sang trang đặt hàng`
+        : 'Số khách mang sản phẩm này vào trang đặt hàng'}>
+        <span style={{ cursor: 'help' }}>{v.toLocaleString('vi-VN')}</span>
+      </Tip>
+    ),
+  },
+  {
+    title: 'Đã bán',
+    dataIndex: 'quantitySold',
+    align: 'right',
+    width: 95,
+    sorter: (a, b) => a.quantitySold - b.quantitySold,
+    render: (v: number, r) => (
+      <Tip title={`${v} sản phẩm, trong ${r.orders} đơn`}>
+        <span style={{ fontWeight: 600, cursor: 'help' }}>{v.toLocaleString('vi-VN')}</span>
+      </Tip>
+    ),
+  },
+  {
+    title: 'Tỉ lệ mua',
+    key: 'tiLeMua',
+    align: 'right',
+    width: 110,
+    sorter: (a, b) => (a.viewers ? a.buyers / a.viewers : 0) - (b.viewers ? b.buyers / b.viewers : 0),
+    render: (_: unknown, r) => (
+      <TiLe value={r.buyers} mau={r.viewers} nguong={2}
+        goiY="Nhiều người xem nhưng ít ai chốt. Nếu tỉ lệ thêm giỏ vẫn cao thì vướng ở giá hoặc khâu đặt hàng, không phải ở trang sản phẩm." />
+    ),
+  },
+  {
+    title: 'Doanh thu',
+    dataIndex: 'revenue',
+    align: 'right',
+    width: 130,
+    sorter: (a, b) => a.revenue - b.revenue,
+    render: (v: number) =>
+      v > 0 ? <span style={{ fontWeight: 600 }}>{v.toLocaleString('vi-VN')}đ</span>
+            : <span style={{ color: '#bfbfbf' }}>—</span>,
+  },
+];
 
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -80,6 +217,11 @@ export default function AnalyticsPage() {
   const { data: stats, isLoading: loadingStats } = useSWR(
     ['analytics-visits', from, to],
     () => getVisitStats(from, to),
+  );
+
+  const { data: pheu = [], isLoading: loadingPheu } = useSWR(
+    ['analytics-product-funnel', from, to],
+    () => getProductFunnel(from, to),
   );
 
   const { data: hourData, isLoading: loadingHours } = useSWR(
@@ -258,6 +400,36 @@ export default function AnalyticsPage() {
               <Line type="monotone" dataKey="uniqueVisitors" name="Unique visitors" stroke={BLUE} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
+        </Spin>
+      </Card>
+
+      {/* Phễu theo từng sản phẩm */}
+      <Card
+        title="Từng sản phẩm: xem → thêm giỏ → vào đặt hàng → mua"
+        size="small"
+        extra={
+          <span className="text-xs text-gray-400">
+            Số liệu tính từ lúc bật đo hành vi, không có dữ liệu cũ
+          </span>
+        }
+      >
+        <Spin spinning={loadingPheu}>
+          <Table<ProductFunnelRow>
+            dataSource={pheu}
+            columns={COT_PHEU}
+            rowKey="slug"
+            size="small"
+            scroll={{ x: 900 }}
+            pagination={{ pageSize: 20, showTotal: t => `${t} sản phẩm` }}
+          />
+          <div className="text-xs text-gray-500 mt-3 leading-relaxed">
+            <b>Cách đọc theo từng bước rơi rụng:</b><br />
+            • <b>Xem nhiều, thêm giỏ ít</b> → vấn đề ở trang sản phẩm: ảnh, mô tả, giá, hoặc đang hết hàng.<br />
+            • <b>Thêm giỏ nhiều, vào đặt hàng ít</b> → khách nhìn tổng tiền trong giỏ rồi đổi ý: vướng ở giá.<br />
+            • <b>Vào đặt hàng rồi vẫn không thành đơn</b> → vướng ở chính khâu đặt hàng.<br />
+            Cột <b>Đã bán</b> đếm từ đơn hàng thật. <b>Tỉ lệ mua</b> chỉ tính đơn đặt qua web —
+            đơn chốt qua Zalo hoặc điện thoại không được tính vào đây.
+          </div>
         </Spin>
       </Card>
 

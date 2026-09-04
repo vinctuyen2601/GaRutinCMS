@@ -20,3 +20,6 @@ export const getProductConversion = (from: string, to: string) =>
 
 export const getHourStats = (from?: string, to?: string) =>
   api.get('/admin/analytics/hours', { params: { from, to } }).then(r => r.data);
+
+export const getProductFunnel = (from?: string, to?: string) =>
+  api.get('/admin/analytics/product-funnel', { params: { from, to } }).then(r => r.data);
