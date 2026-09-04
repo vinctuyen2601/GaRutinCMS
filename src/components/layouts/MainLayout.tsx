@@ -3,6 +3,7 @@ import { Layout, Menu, Button, Avatar, Typography, theme, Drawer, Grid } from 'a
 import {
   DashboardOutlined,
   BellOutlined,
+  StarOutlined,
   ShoppingOutlined,
   FileTextOutlined,
   AppstoreOutlined,
@@ -38,6 +39,7 @@ const LEAF_ITEMS = [
   { key: '/keywords',    icon: <KeyOutlined />,           label: 'Keywords' },
   { key: '/media',       icon: <PictureOutlined />,       label: 'Media' },
   { key: '/gallery',     icon: <VideoCameraOutlined />,   label: 'Ảnh & video' },
+  { key: '/reviews',     icon: <StarOutlined />,          label: 'Đánh giá' },
   { key: '/notifications', icon: <BellOutlined />,        label: 'Thông báo' },
   { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
 ];
@@ -59,6 +61,7 @@ const MENU_GROUPED = [
     children: [
       { key: '/orders',    icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
       { key: '/customers', icon: <TeamOutlined />,          label: 'Khách hàng' },
+      { key: '/reviews',   icon: <StarOutlined />,         label: 'Đánh giá' },
     ],
   },
   {
