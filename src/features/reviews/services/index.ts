@@ -26,3 +26,19 @@ export const updateReview = (id: string, payload: Partial<Pick<Review, 'isApprov
   api.patch<Review>(`/admin/reviews/${id}`, payload).then(r => r.data);
 
 export const deleteReview = (id: string) => api.delete(`/admin/reviews/${id}`);
+
+export const getReviewsByProduct = (productId: string) =>
+  api.get<Review[]>('/admin/reviews', { params: { productId } }).then(r => r.data);
+
+export type ReviewPayload = {
+  productId: string;
+  customerName: string;
+  phone?: string;
+  rating: number;
+  comment: string;
+  images?: string[];
+};
+
+/** Nhập tay một đánh giá (chép từ Zalo/điện thoại) — duyệt luôn. */
+export const createReview = (payload: ReviewPayload) =>
+  api.post<Review>('/admin/reviews', payload).then(r => r.data);

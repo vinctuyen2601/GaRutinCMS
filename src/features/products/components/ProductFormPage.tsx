@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import {
   Card, Form, Input, InputNumber, Select, Switch, Button, Space,
   message, Typography, Divider, Alert, Tag, Tooltip, Upload, Row, Col,
+  Table, Rate, Popconfirm, Modal, Image,
 } from 'antd';
 import {
   ArrowLeftOutlined, SaveOutlined, ThunderboltOutlined,
   RocketOutlined, BulbOutlined, CheckCircleOutlined, UploadOutlined, PlayCircleFilled, StarOutlined,
+  PlusOutlined, DeleteOutlined,
 } from '@ant-design/icons';
 import { analyzeProduct } from '@/lib/content-analyzer';
 import type { AnalysisResult } from '@/lib/content-analyzer';
 import ScorePanel from '@/components/ScorePanel';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import useSWR from 'swr';
 import type { CreateProductPayload } from '../types';
 import {
@@ -18,6 +20,10 @@ import {
   aiGenerateDescription, aiOptimizeProductSeo, aiImproveDescription,
 } from '../services';
 import { uploadMedia } from '../../media/services';
+import {
+  getReviewsByProduct, createReview, updateReview, deleteReview,
+} from '@/features/reviews/services';
+import type { Review } from '@/features/reviews/services';
 import MediaPicker from '../../media/components/MediaPicker';
 import { getApiError } from '@/lib/error';
 import api from '@/lib/axios';
@@ -37,6 +43,7 @@ export default function ProductFormPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hash } = useLocation();
   const isEdit = Boolean(id);
 
   const [aiLoading, setAiLoading] = useState<'generate' | 'seo' | 'improve' | null>(null);
@@ -53,6 +60,62 @@ export default function ProductFormPage() {
   };
 
   const { data: products = [] } = useSWR(isEdit ? 'admin-products' : null, getProducts);
+
+  // ── Đánh giá của sản phẩm này ──────────────────────────────────────────
+  const { data: danhGia = [], mutate: napLaiDanhGia, isLoading: dangTaiDanhGia } = useSWR(
+    isEdit && id ? ['product-reviews', id] : null,
+    () => getReviewsByProduct(id!),
+  );
+  const [formDanhGia] = Form.useForm();
+  const [moFormDanhGia, setMoFormDanhGia] = useState(false);
+  const [dangLuuDanhGia, setDangLuuDanhGia] = useState(false);
+
+  const luuDanhGia = async () => {
+    const v = await formDanhGia.validateFields();
+    setDangLuuDanhGia(true);
+    try {
+      await createReview({ productId: id!, ...v });
+      message.success('Đã thêm đánh giá');
+      setMoFormDanhGia(false);
+      formDanhGia.resetFields();
+      napLaiDanhGia();
+    } catch (e) {
+      message.error(getApiError(e, 'Thêm thất bại'));
+    } finally {
+      setDangLuuDanhGia(false);
+    }
+  };
+
+  const doiTrangThaiDanhGia = async (r: Review, duyet: boolean) => {
+    try {
+      await updateReview(r.id, { isApproved: duyet });
+      napLaiDanhGia();
+    } catch (e) {
+      message.error(getApiError(e, 'Không cập nhật được'));
+    }
+  };
+
+  /**
+   * Mở bằng đường dẫn kết thúc bằng #reviews thì cuộn thẳng tới mục Đánh giá.
+   *
+   * Trình duyệt tự cuộn tới neo ngay lúc tải, nhưng lúc đó bảng đánh giá còn
+   * đang tải nên nó chưa chiếm chỗ — cuộn xong thì nội dung bên trên đẩy neo
+   * đi mất. Chờ tới khi có dữ liệu rồi mới cuộn.
+   */
+  useEffect(() => {
+    if (hash !== '#reviews' || !isEdit || dangTaiDanhGia) return;
+    const el = document.getElementById('reviews');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [hash, isEdit, dangTaiDanhGia, danhGia.length]);
+
+  const xoaDanhGia = async (reviewId: string) => {
+    try {
+      await deleteReview(reviewId);
+      napLaiDanhGia();
+    } catch (e) {
+      message.error(getApiError(e, 'Xoá thất bại'));
+    }
+  };
   const { data: categories = [] } = useSWR('categories', fetchCategories);
 
   useEffect(() => {
@@ -517,6 +580,109 @@ export default function ProductFormPage() {
             </Form.Item>
           </div>
 
+          {/* Đánh giá — chỉ khi đang sửa sản phẩm đã tồn tại; sản phẩm chưa lưu
+              thì chưa có id để gắn đánh giá vào. Neo #reviews để thông báo
+              "đánh giá mới" mở thẳng tới đây. */}
+          {isEdit && (
+            <>
+              <div id="reviews" style={{ scrollMarginTop: 72 }} />
+              <Divider titlePlacement="left">
+                <StarOutlined className="mr-1" />
+                Đánh giá ({danhGia.length})
+              </Divider>
+              <div className="mb-3">
+                <Button icon={<PlusOutlined />} type="dashed" onClick={() => setMoFormDanhGia(true)}>
+                  Thêm đánh giá
+                </Button>
+                <span className="text-xs text-gray-400 ml-3">
+                  Dùng để chép lại lời khen khách nhắn qua Zalo hoặc điện thoại — đánh giá nhập ở đây được duyệt luôn.
+                </span>
+              </div>
+              <Table<Review>
+                dataSource={danhGia}
+                rowKey="id"
+                loading={dangTaiDanhGia}
+                size="small"
+                scroll={{ x: 700 }}
+                pagination={{ pageSize: 10, showTotal: t => `${t} đánh giá` }}
+                locale={{ emptyText: 'Sản phẩm này chưa có đánh giá nào' }}
+                columns={[
+                  {
+                    title: 'Khách hàng',
+                    dataIndex: 'customerName',
+                    width: 140,
+                    render: (v: string, r: Review) => (
+                      <div>
+                        <div className="font-semibold text-sm">{v}</div>
+                        {r.phone && <div className="text-xs text-gray-400">{r.phone}</div>}
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Sao',
+                    dataIndex: 'rating',
+                    width: 120,
+                    render: (v: number) => <Rate disabled value={v} style={{ fontSize: 13 }} />,
+                  },
+                  {
+                    title: 'Nội dung',
+                    dataIndex: 'comment',
+                    render: (v: string, r: Review) => (
+                      <div>
+                        <div className="text-sm whitespace-pre-line">{v || <span className="text-gray-400">—</span>}</div>
+                        {(r.images?.length || r.video) && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {r.images?.map((u, i) => (
+                              <Image key={i} src={u} width={44} height={44} style={{ objectFit: 'cover', borderRadius: 4 }} />
+                            ))}
+                            {r.video && (
+                              <video src={r.video} controls preload="metadata"
+                                     style={{ width: 72, height: 44, borderRadius: 4, background: '#000' }} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Ngày',
+                    dataIndex: 'createdAt',
+                    width: 100,
+                    render: (v: string) => new Date(v).toLocaleDateString('vi-VN'),
+                  },
+                  {
+                    title: 'Trạng thái',
+                    dataIndex: 'isApproved',
+                    width: 110,
+                    render: (v: boolean) => <Tag color={v ? 'green' : 'gold'}>{v ? 'Đã duyệt' : 'Chờ duyệt'}</Tag>,
+                  },
+                  {
+                    title: '',
+                    key: 'thao-tac',
+                    width: 110,
+                    render: (_: unknown, r: Review) => (
+                      <Space size={4}>
+                        {r.isApproved ? (
+                          <Tooltip title="Gỡ khỏi web">
+                            <Button size="small" onClick={() => doiTrangThaiDanhGia(r, false)}>Gỡ</Button>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Duyệt để hiện trên web">
+                            <Button size="small" type="primary" onClick={() => doiTrangThaiDanhGia(r, true)}>Duyệt</Button>
+                          </Tooltip>
+                        )}
+                        <Popconfirm title="Xoá đánh giá này?" okText="Xoá" cancelText="Hủy"
+                                    okButtonProps={{ danger: true }} onConfirm={() => xoaDanhGia(r.id)}>
+                          <Button size="small" danger icon={<DeleteOutlined />} />
+                        </Popconfirm>
+                      </Space>
+                    ),
+                  },
+                ]}
+              />
+            </>
+          )}
+
           <Form.Item className="mt-4">
             <Space>
               <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
@@ -526,6 +692,33 @@ export default function ProductFormPage() {
             </Space>
           </Form.Item>
         </Form>
+
+        <Modal
+          title="Thêm đánh giá"
+          open={moFormDanhGia}
+          onCancel={() => setMoFormDanhGia(false)}
+          onOk={luuDanhGia}
+          confirmLoading={dangLuuDanhGia}
+          okText="Thêm"
+          cancelText="Hủy"
+        >
+          <Form form={formDanhGia} layout="vertical" initialValues={{ rating: 5 }}>
+            <Form.Item label="Tên khách" name="customerName"
+                       rules={[{ required: true, message: 'Nhập tên khách' }]}>
+              <Input placeholder="VD: Anh Tuấn" />
+            </Form.Item>
+            <Form.Item label="Số điện thoại" name="phone">
+              <Input placeholder="Không bắt buộc" />
+            </Form.Item>
+            <Form.Item label="Số sao" name="rating" rules={[{ required: true }]}>
+              <Rate />
+            </Form.Item>
+            <Form.Item label="Nội dung" name="comment"
+                       rules={[{ required: true, min: 10, message: 'Nhận xét cần ít nhất 10 ký tự' }]}>
+              <Input.TextArea rows={4} placeholder="Chép lại nguyên văn lời khách nhắn" />
+            </Form.Item>
+          </Form>
+        </Modal>
       </Card>
       </Col>
       {scoreResult && (
