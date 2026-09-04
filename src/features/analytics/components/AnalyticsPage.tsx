@@ -146,10 +146,19 @@ const COT_PHEU: ColumnsType<ProductFunnelRow> = [
     align: 'right',
     width: 110,
     sorter: (a, b) => (a.viewers ? a.buyers / a.viewers : 0) - (b.viewers ? b.buyers / b.viewers : 0),
-    render: (_: unknown, r) => (
-      <TiLe value={r.buyers} mau={r.viewers} nguong={2}
-        goiY="Nhiều người xem nhưng ít ai chốt. Nếu tỉ lệ thêm giỏ vẫn cao thì vướng ở giá hoặc khâu đặt hàng, không phải ở trang sản phẩm." />
-    ),
+    render: (_: unknown, r) =>
+      // Bán được nhưng không nối được đơn nào với người xem thì hiện "—", KHÔNG
+      // hiện "0%": 0% nghĩa là "có người xem mà không ai mua", còn ở đây là
+      // "có người mua mà không đo được" — đơn qua Zalo/điện thoại, hoặc đơn đặt
+      // trước khi bật đo hành vi. Hiện 0% cạnh cột "đã bán 1" là tự mâu thuẫn.
+      r.buyers === 0 && r.quantitySold > 0 ? (
+        <Tip title="Có bán nhưng không nối được với người xem trên web — thường là đơn chốt qua Zalo/điện thoại, hoặc đơn đặt trước khi bật đo hành vi.">
+          <span style={{ color: '#bfbfbf', cursor: 'help' }}>—</span>
+        </Tip>
+      ) : (
+        <TiLe value={r.buyers} mau={r.viewers} nguong={2}
+          goiY="Nhiều người xem nhưng ít ai chốt. Nếu tỉ lệ thêm giỏ vẫn cao thì vướng ở giá hoặc khâu đặt hàng, không phải ở trang sản phẩm." />
+      ),
   },
   {
     title: 'Doanh thu',
@@ -430,7 +439,10 @@ export default function AnalyticsPage() {
             Cột <b>Đã bán</b> đếm từ đơn hàng thật. <b>Tỉ lệ mua</b> chỉ tính đơn đặt qua web —
             đơn chốt qua Zalo hoặc điện thoại không được tính vào đây.<br />
             Sản phẩm không ai xem <i>và</i> không bán được món nào thì được ẩn khỏi bảng. Sản phẩm
-            có bán nhưng chưa ai xem vẫn hiện — đó thường là đơn chốt qua Zalo.
+            có bán nhưng chưa ai xem vẫn hiện — đó thường là đơn chốt qua Zalo.<br />
+            Ba cột <b>Khách xem · Thêm giỏ · Vào đặt hàng</b> chỉ tính lượt truy cập kể từ khi bật đo
+            hành vi, nên chúng luôn so sánh được với nhau. Cột <b>Đã bán</b> đếm mọi đơn trong kỳ,
+            kể cả đơn cũ — nên một sản phẩm có thể "đã bán" mà chưa có bước thêm giỏ nào.
           </div>
         </Spin>
       </Card>
