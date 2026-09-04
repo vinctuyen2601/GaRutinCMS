@@ -19,6 +19,21 @@ const STOCK_STATUS_LABELS: Record<string, { label: string; color: string }> = {
 const formatVND = (n: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
+/**
+ * Chỉ coi là đang giảm giá khi giá sale THẤP HƠN giá niêm yết.
+ *
+ * Trước đây chỉ hỏi "có điền giá sale hay không", nên sản phẩm có sale bằng
+ * đúng giá niêm yết vẫn hiện gạch ngang lên chính con số đang bán — giảm 0%
+ * nhưng nhìn như đang khuyến mãi. Cùng luật với bên web (src/lib/gia.ts).
+ *
+ * Muốn tắt khuyến mãi cho một sản phẩm: xoá trống ô "Giá sale".
+ */
+const coGiamGia = (r: { price?: number | string | null; salePrice?: number | string | null }) => {
+  const sale = Number(r.salePrice);
+  const goc = Number(r.price);
+  return Number.isFinite(sale) && Number.isFinite(goc) && sale > 0 && goc > 0 && sale < goc;
+};
+
 export default function ProductsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -130,9 +145,9 @@ export default function ProductsPage() {
       key: 'price',
       render: (_: unknown, r: Product) => (
         <span>
-          {r.salePrice ? (
+          {coGiamGia(r) ? (
             <>
-              <span className="text-red-500 font-medium">{formatVND(r.salePrice)}</span>{' '}
+              <span className="text-red-500 font-medium">{formatVND(r.salePrice!)}</span>{' '}
               <span className="text-gray-400 line-through text-xs">{formatVND(r.price)}</span>
             </>
           ) : (
