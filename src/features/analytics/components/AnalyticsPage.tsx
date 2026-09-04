@@ -6,13 +6,14 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import {
   BarChartOutlined, EyeOutlined, UserOutlined, RiseOutlined, SearchOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
-import { getVisitStats, getVisitTable } from '../services';
+import { getVisitStats, getVisitTable, getHourStats } from '../services';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -21,6 +22,9 @@ const GREEN = '#16a34a';
 const BLUE = '#2563eb';
 const MUTED = '#898781';
 const GRID = '#e1e0d9';
+
+/** Tên gọi dân dã cho từng khung bốn tiếng, để chủ trại đọc bảng không phải nhẩm. */
+const BUOI = ['đêm', 'sáng sớm', 'buổi sáng', 'đầu chiều', 'cuối chiều', 'buổi tối'];
 
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -46,6 +50,18 @@ interface TimelineRow {
   uniqueVisitors: number;
 }
 
+/**
+ * Một khung giờ bốn tiếng trong ngày, giờ Việt Nam. Máy chủ luôn trả đủ sáu
+ * khung kể cả khung không có ai — khung vắng cũng là thông tin.
+ */
+interface HourRow {
+  bucket: number;
+  label: string;
+  visits: number;
+  visitors: number;
+  orders: number;
+}
+
 interface TableRow {
   path: string;
   visits: number;
@@ -66,6 +82,11 @@ export default function AnalyticsPage() {
     () => getVisitStats(from, to),
   );
 
+  const { data: hourData, isLoading: loadingHours } = useSWR(
+    ['analytics-hours', from, to],
+    () => getHourStats(from, to),
+  );
+
   const { data: rawTable, isLoading: loadingTable } = useSWR(
     ['analytics-table', from, to, appliedPath],
     () => getVisitTable({ from, to, path: appliedPath || undefined }),
@@ -74,6 +95,55 @@ export default function AnalyticsPage() {
   const total          = stats?.total ?? 0;
   const uniqueVisitors = stats?.uniqueVisitors ?? 0;
   const timeline: TimelineRow[] = stats?.timeline ?? [];
+
+  const hours: HourRow[] = hourData ?? [];
+  // So sánh theo khung đông nhất chứ không theo tổng: khi lưu lượng dồn vào
+  // một khung thì các thanh tính theo tổng đều ngắn tũn, nhìn không ra chênh
+  // lệch giữa những khung còn lại.
+  const hourMax = Math.max(1, ...hours.map(h => h.visits));
+
+  const hourColumns: ColumnsType<HourRow> = [
+    {
+      title: 'Khung giờ',
+      dataIndex: 'label',
+      key: 'label',
+      width: 130,
+      render: (v: string, r) => (
+        <span className="font-medium">
+          {v} <span className="text-gray-400 text-xs ml-1">{BUOI[r.bucket]}</span>
+        </span>
+      ),
+    },
+    {
+      title: 'Lượt xem',
+      dataIndex: 'visits',
+      key: 'visits',
+      render: (v: number) => (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-[60px] h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${(v / hourMax) * 100}%`, background: GREEN }} />
+          </div>
+          <span className="font-semibold w-12 text-right">{v.toLocaleString('vi-VN')}</span>
+        </div>
+      ),
+    },
+    {
+      title: 'Khách',
+      dataIndex: 'visitors',
+      key: 'visitors',
+      width: 100,
+      render: (v: number) => <span className="text-blue-600 font-semibold">{v.toLocaleString('vi-VN')}</span>,
+    },
+    {
+      title: 'Đơn hàng',
+      dataIndex: 'orders',
+      key: 'orders',
+      width: 100,
+      render: (v: number) => (
+        <span className={v > 0 ? 'font-semibold' : 'text-gray-300'}>{v.toLocaleString('vi-VN')}</span>
+      ),
+    },
+  ];
 
   const tableColumns: ColumnsType<TableRow> = [
     {
@@ -189,6 +259,27 @@ export default function AnalyticsPage() {
             </LineChart>
           </ResponsiveContainer>
         </Spin>
+      </Card>
+
+      {/* Khung giờ khách ghé thăm */}
+      <Card
+        title={<><ClockCircleOutlined className="mr-2" />Khung giờ khách ghé thăm</>}
+        size="small"
+        extra={<span className="text-xs text-gray-400">giờ Việt Nam</span>}
+      >
+        <Spin spinning={loadingHours}>
+          <Table<HourRow>
+            dataSource={hours}
+            columns={hourColumns}
+            rowKey="bucket"
+            size="small"
+            pagination={false}
+            scroll={{ x: 460 }}
+          />
+        </Spin>
+        <div className="text-xs text-gray-400 mt-2">
+          Đơn hàng tính theo giờ khách đặt. Dùng bảng này để chọn giờ đăng bài và giờ trực Zalo.
+        </div>
       </Card>
 
       {/* Top pages table */}

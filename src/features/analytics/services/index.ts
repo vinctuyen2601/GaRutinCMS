@@ -17,3 +17,6 @@ export const getMonthlyCompare = () =>
 
 export const getProductConversion = (from: string, to: string) =>
   api.get('/admin/analytics/product-conversion', { params: { from, to } }).then(r => r.data);
+
+export const getHourStats = (from?: string, to?: string) =>
+  api.get('/admin/analytics/hours', { params: { from, to } }).then(r => r.data);
