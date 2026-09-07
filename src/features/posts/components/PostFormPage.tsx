@@ -138,17 +138,26 @@ export default function PostFormPage() {
   useEffect(() => {
     if (isEdit && posts.length > 0) {
       const target = posts.find((p: { id: string }) => p.id === id);
-      if (target) form.setFieldsValue({ ...target, tags: target.tags ?? [] });
+      if (target) {
+        form.setFieldsValue({ ...target, tags: target.tags ?? [] });
+        // templateId là useState riêng chứ không phải một trường của Form, nên
+        // setFieldsValue ở trên không đụng tới nó. Thiếu dòng này thì mở bài cũ
+        // ra ô "Cấu trúc bài viết" luôn trống, và lần lưu sau sẽ xoá mất khuôn.
+        setTemplateId(target.templateId ?? undefined);
+      }
     }
   }, [isEdit, posts, id, form]);
 
   const onFinish = async (values: CreatePostPayload) => {
+    // Gộp tay vì templateId không phải trường của Form nên không có trong values.
+    // null chứ không undefined — xem chú thích ở kiểu Post.
+    const payload = { ...values, templateId: templateId ?? null };
     try {
       if (isEdit && id) {
-        await updatePost(id, values);
+        await updatePost(id, payload);
         message.success('Đã cập nhật bài viết');
       } else {
-        await createPost(values);
+        await createPost(payload);
         message.success('Đã tạo bài viết mới');
       }
       navigate('/posts');

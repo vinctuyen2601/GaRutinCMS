@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
 import type { Post } from '../types';
-import { getPosts, deletePost, updatePost } from '../services';
+import { getPosts, deletePost, updatePost, getPostTemplates } from '../services';
 import { getActiveKeyword, crawlToDrafts } from '@/features/keywords/services';
 import { getApiError } from '@/lib/error';
 
@@ -21,6 +21,7 @@ export default function PostsPage() {
   const navigate = useNavigate();
   const { data: posts = [], isLoading, mutate } = useSWR('admin-posts', getPosts);
   const { data: activeKeyword } = useSWR('admin-keywords-active', getActiveKeyword);
+  const { data: postTemplates = [] } = useSWR('post-templates', getPostTemplates);
   const [crawling, setCrawling] = useState(false);
 
   const handleDelete = async (id: string) => {
@@ -72,6 +73,21 @@ export default function PostsPage() {
       key: 'category',
       width: 130,
       render: (v: string) => v || '—',
+    },
+    {
+      title: 'Cấu trúc',
+      dataIndex: 'templateId',
+      key: 'templateId',
+      width: 170,
+      render: (v: string) => {
+        if (!v) return <span className="text-gray-400">—</span>;
+        const t = postTemplates.find((pt) => pt.id === v);
+        // Khuôn bị gỡ khỏi mã nguồn thì không tra được tên — hiện lại chính id
+        // thay vì để trống, để còn biết bài này từng theo khuôn nào.
+        return t
+          ? <Tooltip title={t.description}><Tag color="blue">{t.name}</Tag></Tooltip>
+          : <Tag>{v}</Tag>;
+      },
     },
     {
       title: 'Trạng thái',

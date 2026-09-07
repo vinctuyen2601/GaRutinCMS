@@ -17,6 +17,15 @@ export type Post = {
   contentScore?: number;
   seoDetails?: Record<string, any>;
   keywordId?: string;
+  /**
+   * Id cấu trúc bài viết, khớp với PostTemplate.id. Bài cũ không có.
+   *
+   * Cho phép null chứ không chỉ undefined: bỏ chọn khuôn phải gửi null lên máy
+   * chủ. Gửi undefined thì JSON.stringify bỏ hẳn khoá này, Object.assign bên
+   * máy chủ không đụng tới cột, và khuôn cũ ở lại vĩnh viễn — ô chọn có nút xoá
+   * mà bấm vào không xoá được gì.
+   */
+  templateId?: string | null;
   createdAt: string;
   updatedAt: string;
 };
