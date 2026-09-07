@@ -225,10 +225,26 @@ export default function ProductFormPage() {
     }
   };
 
+  /**
+   * Tên tệp ảnh lấy theo tên sản phẩm, không để nguyên tên máy điện thoại đặt.
+   *
+   * Google Images dùng tên tệp làm một tín hiệu xếp hạng. Không truyền gì thì
+   * máy chủ giữ nguyên tên gốc, và ảnh chụp từ điện thoại ra những cái tên như
+   * "z8091011020078-2a0437b6ff18d5df0dabea8c6997fecc.webp" — không nói được gì
+   * về con gà trong ảnh. Máy chủ tự chuyển tên này thành slug không dấu.
+   *
+   * Trả về undefined khi form chưa có tên: thà giữ tên gốc còn hơn đặt tất cả
+   * thành "san-pham-1", "san-pham-2".
+   */
+  const tenTepTheoSanPham = (): string | undefined => {
+    const ten = (form.getFieldValue('name') ?? '').trim();
+    return ten || undefined;
+  };
+
   const handleImageUpload = async (file: File) => {
     setImageUploading(true);
     try {
-      const res = await uploadMedia(file);
+      const res = await uploadMedia(file, tenTepTheoSanPham());
       const current: string[] = form.getFieldValue('images') ?? [];
       form.setFieldValue('images', [...current, res.url]);
       message.success('Đã upload ảnh');
@@ -271,7 +287,7 @@ export default function ProductFormPage() {
     }
     setVideoUploading(true);
     try {
-      const res = await uploadMedia(file);
+      const res = await uploadMedia(file, tenTepTheoSanPham());
       themVideo(res.url);
       message.success('Đã upload video');
     } catch (err) {

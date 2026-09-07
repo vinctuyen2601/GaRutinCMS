@@ -228,7 +228,10 @@ export default function PostFormPage() {
   const handleCoverUpload = async (file: File) => {
     setCoverUploading(true);
     try {
-      const res = await uploadMedia(file);
+      // Tên tệp theo tiêu đề bài, để ảnh bìa có tên đọc được thay vì tên máy
+      // điện thoại đặt — Google Images dùng tên tệp làm tín hiệu xếp hạng.
+      const tieuDe = (form.getFieldValue('title') ?? '').trim() || undefined;
+      const res = await uploadMedia(file, tieuDe);
       form.setFieldValue('coverImage', res.url);
       message.success('Upload ảnh bìa thành công');
     } catch (err) {
