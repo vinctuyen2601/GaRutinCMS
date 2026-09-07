@@ -4,6 +4,7 @@ import {
   Input, Button, Space, Tooltip as Tip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import type { TimeRangePickerProps } from 'antd';
 import {
   BarChartOutlined, EyeOutlined, UserOutlined, RiseOutlined, SearchOutlined,
   ClockCircleOutlined,
@@ -17,6 +18,23 @@ import { getVisitStats, getVisitTable, getHourStats, getProductFunnel } from '..
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
+
+/**
+ * Các mốc thời gian bấm một cái là chọn xong, hiện ngay trong lịch.
+ *
+ * Là HÀM chứ không phải hằng số: tính một lần lúc nạp module thì tab để mở qua
+ * nửa đêm sẽ đưa "Hôm nay" về ngày hôm trước — trang phân tích hay được mở cả
+ * ngày nên chuyện này xảy ra thật.
+ *
+ * "7 ngày" lùi 6 ngày và "30 ngày" lùi 29 ngày, vì khoảng đã tính cả hôm nay:
+ * lùi đủ 7 và 30 thì thành 8 và 31 ngày.
+ */
+const mocThoiGian = (): TimeRangePickerProps['presets'] => [
+  { label: 'Hôm nay', value: [dayjs(), dayjs()] },
+  { label: 'Hôm qua', value: [dayjs().subtract(1, 'day'), dayjs().subtract(1, 'day')] },
+  { label: '7 ngày',  value: [dayjs().subtract(6, 'day'), dayjs()] },
+  { label: '30 ngày', value: [dayjs().subtract(29, 'day'), dayjs()] },
+];
 
 const GREEN = '#16a34a';
 const BLUE = '#2563eb';
@@ -216,9 +234,8 @@ interface TableRow {
 
 export default function AnalyticsPage() {
   const today    = dayjs().format('YYYY-MM-DD');
-  const monthAgo = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
 
-  const [from, setFrom]               = useState(monthAgo);
+  const [from, setFrom]               = useState(today);
   const [to, setTo]                   = useState(today);
   const [searchInput, setSearchInput] = useState('');
   const [appliedPath, setAppliedPath] = useState('');
@@ -342,6 +359,7 @@ export default function AnalyticsPage() {
       <Card size="small">
         <RangePicker
           value={[dayjs(from), dayjs(to)]}
+          presets={mocThoiGian()}
           onChange={v => {
             if (v?.[0] && v?.[1]) {
               setFrom(v[0].format('YYYY-MM-DD'));
