@@ -115,13 +115,33 @@ export default function MediaPage() {
               size="small"
               cover={
                 <div className="relative overflow-hidden" style={{ height: 140, background: '#f5f5f5' }}>
-                  <Image
-                    src={file.url}
-                    alt={file.originalName}
-                    style={{ width: '100%', height: 140, objectFit: 'cover' }}
-                    preview={{ mask: 'Xem' }}
-                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-                  />
+                  {file.mimeType?.startsWith('video/') ? (
+                      // Video KHÔNG vẽ được bằng thẻ ảnh: trình duyệt không giải
+                      // mã mp4 trong <img> nên trước đây mọi video đều rơi xuống
+                      // ảnh dự phòng 1x1 và hiện ra một ô xám trống.
+                      //
+                      // #t=0.1 chứ không phải #t=0: nhiều trình duyệt trả khung
+                      // đen ở đúng giây 0. preload="metadata" đủ để dựng khung
+                      // hình đầu mà không tải cả tệp.
+                      //
+                      // controls để xem được ngay tại chỗ — antd Image mở đèn
+                      // lồng dành cho ảnh, không phát được video.
+                      <video
+                        src={`${file.url}#t=0.1`}
+                        muted
+                        controls
+                        preload="metadata"
+                        style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }}
+                      />
+                    ) : (
+                      <Image
+                        src={file.url}
+                        alt={file.originalName}
+                        style={{ width: '100%', height: 140, objectFit: 'cover' }}
+                        preview={{ mask: 'Xem' }}
+                        fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                      />
+                    )}
                 </div>
               }
               bodyStyle={{ padding: '8px' }}
