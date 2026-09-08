@@ -3,6 +3,10 @@ import api from '@/lib/axios';
 export const getVisitStats = (from?: string, to?: string) =>
   api.get('/admin/analytics/visits', { params: { from, to } }).then(r => r.data);
 
+/** Bảng nguồn truy cập theo utm_source + utm_campaign — kết quả của các link quảng cáo. */
+export const getSourceTable = (params: { from?: string; to?: string }) =>
+  api.get('/admin/analytics/sources', { params }).then(r => r.data);
+
 export const getVisitTable = (params: { from?: string; to?: string; path?: string }) =>
   api.get('/admin/analytics/table', { params }).then(r => r.data);
 

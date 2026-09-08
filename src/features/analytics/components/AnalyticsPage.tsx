@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
   Card, DatePicker, Row, Col, Table, Typography, Statistic, Spin,
-  Input, Button, Space, Tooltip as Tip,
+  Input, Button, Space, Tooltip as Tip, Tag,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TimeRangePickerProps } from 'antd';
 import {
+  LinkOutlined,
   BarChartOutlined, EyeOutlined, UserOutlined, RiseOutlined, SearchOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
@@ -14,7 +15,7 @@ import {
 } from 'recharts';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
-import { getVisitStats, getVisitTable, getHourStats, getProductFunnel } from '../services';
+import { getVisitStats, getVisitTable, getHourStats, getProductFunnel, getSourceTable } from '../services';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -232,6 +233,17 @@ interface TableRow {
   uniqueVisitors: number;
 }
 
+type NguonRow = { source: string; campaign: string; visits: number; visitors: number };
+
+const nguonColumns: ColumnsType<NguonRow> = [
+  { title: 'Nguồn', dataIndex: 'source', width: 170,
+    render: (v: string) => <Tag color={v === 'trực tiếp' ? 'default' : 'blue'}>{v}</Tag> },
+  { title: 'Chiến dịch', dataIndex: 'campaign',
+    render: (v: string) => (v === '—' ? <span className="text-gray-400">—</span> : v) },
+  { title: 'Lượt xem', dataIndex: 'visits', width: 100, align: 'right' as const },
+  { title: 'Số người', dataIndex: 'visitors', width: 100, align: 'right' as const },
+];
+
 export default function AnalyticsPage() {
   const today    = dayjs().format('YYYY-MM-DD');
 
@@ -243,6 +255,11 @@ export default function AnalyticsPage() {
   const { data: stats, isLoading: loadingStats } = useSWR(
     ['analytics-visits', from, to],
     () => getVisitStats(from, to),
+  );
+
+  const { data: nguon = [], isLoading: loadingNguon } = useSWR(
+    ['analytics-sources', from, to],
+    () => getSourceTable({ from, to }),
   );
 
   const { data: pheu = [], isLoading: loadingPheu } = useSWR(
@@ -463,6 +480,28 @@ export default function AnalyticsPage() {
             kể cả đơn cũ — nên một sản phẩm có thể "đã bán" mà chưa có bước thêm giỏ nào.
           </div>
         </Spin>
+      </Card>
+
+      {/* Nguồn truy cập — kết quả của các link quảng cáo */}
+      <Card
+        title={<><LinkOutlined className="mr-2" />Nguồn truy cập</>}
+        size="small"
+        extra={<span className="text-xs text-gray-400">tạo link ở mục Link quảng cáo</span>}
+      >
+        <Spin spinning={loadingNguon}>
+          <Table<NguonRow>
+            dataSource={nguon as NguonRow[]}
+            columns={nguonColumns}
+            rowKey={(r) => `${r.source}|${r.campaign}`}
+            size="small"
+            pagination={false}
+            scroll={{ x: 460 }}
+          />
+        </Spin>
+        <div className="text-xs text-gray-400 mt-2">
+          Lượt truy cập không mang mã theo dõi được gom thành “trực tiếp” hoặc theo
+          tên miền giới thiệu, nên tổng ở đây luôn khớp với tổng lượt truy cập.
+        </div>
       </Card>
 
       {/* Khung giờ khách ghé thăm */}

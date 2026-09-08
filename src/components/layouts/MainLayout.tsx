@@ -15,6 +15,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   BarChartOutlined,
+  LinkOutlined,
   FundOutlined,
   KeyOutlined,
   TeamOutlined,
@@ -31,6 +32,7 @@ const LEAF_ITEMS = [
   { key: '/dashboard',   icon: <DashboardOutlined />,     label: 'Dashboard' },
   { key: '/analytics',   icon: <BarChartOutlined />,      label: 'Phân tích' },
   { key: '/reports',     icon: <FundOutlined />,          label: 'Báo cáo' },
+  { key: '/utm-builder', icon: <LinkOutlined />,          label: 'Link quảng cáo' },
   { key: '/orders',      icon: <UnorderedListOutlined />, label: 'Đơn hàng' },
   { key: '/customers',   icon: <TeamOutlined />,          label: 'Khách hàng' },
   { key: '/products',    icon: <ShoppingOutlined />,      label: 'Sản phẩm' },
@@ -53,6 +55,7 @@ const MENU_GROUPED = [
       { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: '/analytics', icon: <BarChartOutlined />,  label: 'Phân tích' },
       { key: '/reports',   icon: <FundOutlined />,      label: 'Báo cáo' },
+      { key: '/utm-builder', icon: <LinkOutlined />,    label: 'Link quảng cáo' },
     ],
   },
   {

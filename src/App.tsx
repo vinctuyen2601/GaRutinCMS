@@ -16,6 +16,7 @@ const OrdersPage          = lazy(() => import('@/features/orders/components/Orde
 const OrderDetailPage     = lazy(() => import('@/features/orders/components/OrderDetailPage'));
 const MediaPage           = lazy(() => import('@/features/media/components/MediaPage'));
 const GalleryPage         = lazy(() => import('@/features/gallery/components/GalleryPage'));
+const UtmBuilderPage      = lazy(() => import('@/features/utm-builder/components/UtmBuilderPage'));
 const SiteConfigPage      = lazy(() => import('@/features/site-config/components/SiteConfigPage'));
 const KeywordsPage        = lazy(() => import('@/features/keywords/components/KeywordsPage'));
 const AnalyticsPage       = lazy(() => import('@/features/analytics/components/AnalyticsPage'));
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/orders/:id"        element={<PrivateLayout><OrderDetailPage /></PrivateLayout>} />
           <Route path="/media"             element={<PrivateLayout><MediaPage /></PrivateLayout>} />
           <Route path="/gallery"           element={<PrivateLayout><GalleryPage /></PrivateLayout>} />
+          <Route path="/utm-builder"       element={<PrivateLayout><UtmBuilderPage /></PrivateLayout>} />
           <Route path="/site-config"       element={<PrivateLayout><SiteConfigPage /></PrivateLayout>} />
           <Route path="/keywords"          element={<PrivateLayout><KeywordsPage /></PrivateLayout>} />
           <Route path="/analytics"         element={<PrivateLayout><AnalyticsPage /></PrivateLayout>} />
