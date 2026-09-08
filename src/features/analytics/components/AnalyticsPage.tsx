@@ -233,11 +233,28 @@ interface TableRow {
   uniqueVisitors: number;
 }
 
-type NguonRow = { source: string; campaign: string; visits: number; visitors: number };
+type NguonRow = { source: string; campaign: string; loai: string; visits: number; visitors: number };
+
+/**
+ * Màu theo loại lưu lượng.
+ *
+ * Cột này tồn tại vì "google" (quảng cáo trả tiền) và "google.com" (SEO tự
+ * nhiên) là hai dòng khác nhau nhưng nhìn lướt gần như giống hệt — đọc nhầm ở
+ * đây dẫn thẳng tới quyết định sai về tiền quảng cáo.
+ */
+const MAU_LOAI: Record<string, string> = {
+  'quảng cáo': 'red',
+  'chiến dịch': 'purple',
+  'tự nhiên (SEO)': 'green',
+  'giới thiệu': 'blue',
+  'trực tiếp': 'default',
+};
 
 const nguonColumns: ColumnsType<NguonRow> = [
   { title: 'Nguồn', dataIndex: 'source', width: 170,
     render: (v: string) => <Tag color={v === 'trực tiếp' ? 'default' : 'blue'}>{v}</Tag> },
+  { title: 'Loại', dataIndex: 'loai', width: 140,
+    render: (v: string) => <Tag color={MAU_LOAI[v] ?? 'default'}>{v}</Tag> },
   { title: 'Chiến dịch', dataIndex: 'campaign',
     render: (v: string) => (v === '—' ? <span className="text-gray-400">—</span> : v) },
   { title: 'Lượt xem', dataIndex: 'visits', width: 100, align: 'right' as const },
@@ -499,8 +516,11 @@ export default function AnalyticsPage() {
           />
         </Spin>
         <div className="text-xs text-gray-400 mt-2">
-          Lượt truy cập không mang mã theo dõi được gom thành “trực tiếp” hoặc theo
-          tên miền giới thiệu, nên tổng ở đây luôn khớp với tổng lượt truy cập.
+          Cột <b>Loại</b> tách <b>quảng cáo</b> (link có gắn mã, trả tiền) khỏi
+          <b> tự nhiên (SEO)</b> (khách tự tìm thấy trên Google, Cốc Cốc, Bing) —
+          hai thứ này cùng mang tên “google” nên rất dễ đọc nhầm. Lượt không mang
+          mã theo dõi vẫn được gom vào “trực tiếp” hoặc “giới thiệu”, nên tổng ở
+          đây luôn khớp với tổng lượt truy cập.
         </div>
       </Card>
 
