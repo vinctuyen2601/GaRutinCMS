@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Avatar, Typography, theme, Drawer, Grid } from 'antd';
+import { Layout, Menu, Button, Avatar, Typography, theme, Drawer, Grid, Space } from 'antd';
 import {
   DashboardOutlined,
   BellOutlined,
@@ -141,19 +141,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         style={{ background: '#14532d', borderRight: 0 }}
       />
 
-      {showFull && (
-        <div
-          className="absolute bottom-4 left-0 right-0 px-4 py-3 border-t"
-          style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-        >
-          <div className="flex items-center gap-2">
-            <Avatar style={{ background: token.colorPrimary }}>
-              {user?.email?.[0]?.toUpperCase()}
-            </Avatar>
-            <Text className="text-white text-sm truncate">{user?.email}</Text>
-          </div>
-        </div>
-      )}
     </>
   );
 
@@ -216,9 +203,29 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             }
             onClick={() => (isMobile ? setMobileOpen(true) : setCollapsed(!collapsed))}
           />
-          <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>
-            {!isMobile && 'Đăng xuất'}
-          </Button>
+          {/* Profile chuyển từ thanh bên lên đây.
+              Ở thanh bên nó dùng `absolute bottom-4`, tức nằm ngoài luồng bố
+              cục — menu dài thêm một mục là nó đè lên mục cuối, và lỗi chỉ lộ
+              ra khi danh sách menu đủ dài. Trên header thì nó nằm trong luồng
+              flex, không bao giờ chồng lên gì. */}
+          <Space size={12}>
+            <Space size={8}>
+              <Avatar size="small" style={{ background: token.colorPrimary }}>
+                {user?.email?.[0]?.toUpperCase()}
+              </Avatar>
+              {/* Ẩn email trên điện thoại: header hẹp, để lại thì tên bị cắt
+                  cụt giữa chừng, xấu hơn là không hiện. Avatar vẫn còn để biết
+                  đang đăng nhập bằng tài khoản nào. */}
+              {!isMobile && (
+                <Text className="text-sm" style={{ maxWidth: 220 }} ellipsis>
+                  {user?.email}
+                </Text>
+              )}
+            </Space>
+            <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>
+              {!isMobile && 'Đăng xuất'}
+            </Button>
+          </Space>
         </Header>
 
         <Content style={{ padding: isMobile ? 12 : 24, minWidth: 0 }}>{children}</Content>
