@@ -31,3 +31,23 @@ export const aiOptimizeSeo = (p: OptimizeSeoPayload) =>
 
 export const aiImproveContent = (p: ImproveContentPayload) =>
   api.post<ImproveContentResult>('/admin/posts/ai/improve', p).then((r) => r.data);
+
+/*
+ * Đường LÀM TAY, dùng khi gọi LLM qua API bị lỗi hoặc muốn tiết kiệm hạn mức.
+ *
+ * Máy chủ trả về đúng bộ prompt mà nó sẽ gửi cho LLM, và đọc kết quả dán về
+ * bằng đúng bộ kiểm tra của đường tự động — nên kết quả cuối cùng giống hệt.
+ */
+export const layPromptSeo = (p: OptimizeSeoPayload) =>
+  api.post<{ system: string; user: string; prompt: string }>(
+    '/admin/posts/ai/optimize-seo/prompt', p).then((r) => r.data);
+
+export const apDungTextSeo = (text: string) =>
+  api.post<OptimizeSeoResult>('/admin/posts/ai/optimize-seo/apply', { text }).then((r) => r.data);
+
+export const layPromptImprove = (p: ImproveContentPayload) =>
+  api.post<{ system: string; user: string; prompt: string }>(
+    '/admin/posts/ai/improve/prompt', p).then((r) => r.data);
+
+export const apDungTextImprove = (text: string) =>
+  api.post<ImproveContentResult>('/admin/posts/ai/improve/apply', { text }).then((r) => r.data);

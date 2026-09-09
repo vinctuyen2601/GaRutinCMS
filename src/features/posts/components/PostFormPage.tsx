@@ -38,6 +38,10 @@ import type { CreatePostPayload } from '../types';
 import {
   getPosts,
   createPost,
+  layPromptSeo,
+  apDungTextSeo,
+  layPromptImprove,
+  apDungTextImprove,
   updatePost,
   aiGenerateFromUrl,
   aiGenerateContent,
@@ -48,6 +52,7 @@ import {
 import { uploadMedia } from '../../media/services';
 import MediaPicker from '../../media/components/MediaPicker';
 import { getApiError } from '@/lib/error';
+import AiThuCongModal from './AiThuCongModal';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -84,6 +89,7 @@ export default function PostFormPage() {
   const [urlInput, setUrlInput] = useState('');
   const [urlCategory, setUrlCategory] = useState('');
   const [aiLoading, setAiLoading] = useState<'generate' | 'seo' | 'improve' | null>(null);
+  const [thuCong, setThuCong] = useState<'seo' | 'improve' | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const [scoreResult, setScoreResult] = useState<AnalysisResult | null>(null);
   const [templateId, setTemplateId] = useState<string | undefined>();
@@ -201,6 +207,45 @@ export default function PostFormPage() {
     }
   };
 
+  /*
+   * Áp dụng kết quả vào form. Tách riêng vì có HAI đường tới đây — gọi API tự
+   * động và dán tay — và hai đường bắt buộc phải đặt cùng những trường như
+   * nhau. Viết lại ở đường thứ hai là sớm muộn quên mất một trường, mà quên
+   * kiểu đó không báo lỗi: chỉ là dán tay xong thì thiếu tags hoặc thiếu gợi ý.
+   */
+  const apDungKetQuaSeo = (result: {
+    seoTitle: string; seoDescription: string; slug: string;
+    tags: string[]; suggestions?: string[];
+  }) => {
+    form.setFieldsValue({
+      seoTitle: result.seoTitle,
+      seoDescription: result.seoDescription,
+      slug: result.slug,
+      tags: result.tags,
+    });
+    setSeoSuggestions(result.suggestions ?? []);
+    message.success('Đã tối ưu SEO!');
+  };
+
+  const apDungKetQuaImprove = (result: { content: string; excerpt: string; summary?: string }) => {
+    form.setFieldsValue({ content: result.content, excerpt: result.excerpt });
+    setImproveSummary(result.summary ?? '');
+    message.success('Đã cải thiện nội dung!');
+  };
+
+  /* Cùng dữ liệu gửi đi cho cả đường tự động lẫn đường lấy prompt. */
+  const duLieuSeo = () => {
+    const v = form.getFieldsValue();
+    return {
+      title: v.title, content: v.content, seoTitle: v.seoTitle,
+      seoDescription: v.seoDescription, slug: v.slug, tags: v.tags, templateId,
+    };
+  };
+  const duLieuImprove = () => {
+    const v = form.getFieldsValue();
+    return { title: v.title, content: v.content, category: v.category, templateId };
+  };
+
   const handleOptimizeSeo = async () => {
     const values = form.getFieldsValue();
     if (!values.title || !values.content) {
@@ -219,14 +264,7 @@ export default function PostFormPage() {
         tags: values.tags,
         templateId,
       });
-      form.setFieldsValue({
-        seoTitle: result.seoTitle,
-        seoDescription: result.seoDescription,
-        slug: result.slug,
-        tags: result.tags,
-      });
-      setSeoSuggestions(result.suggestions ?? []);
-      message.success('Đã tối ưu SEO!');
+      apDungKetQuaSeo(result);
     } catch (err) {
       message.error(getApiError(err, 'Tối ưu SEO thất bại'));
     } finally {
@@ -266,12 +304,7 @@ export default function PostFormPage() {
         category: values.category,
         templateId,
       });
-      form.setFieldsValue({
-        content: result.content,
-        excerpt: result.excerpt,
-      });
-      setImproveSummary(result.summary ?? '');
-      message.success('Đã cải thiện nội dung!');
+      apDungKetQuaImprove(result);
     } catch (err) {
       message.error(getApiError(err, 'Cải thiện nội dung thất bại'));
     } finally {
@@ -364,6 +397,43 @@ export default function PostFormPage() {
           >
             Tính điểm
           </Button>
+
+          {/* Đường làm tay: dùng khi gọi AI qua API lỗi hoặc muốn tiết kiệm hạn
+              mức. Đặt cạnh hai nút tự động cho dễ tìm đúng lúc chúng hỏng. */}
+          <Tooltip title="Lấy prompt để tự chạy trên ChatGPT / Claude, rồi dán kết quả về — không tốn hạn mức AI">
+            <Button
+              size="small"
+              type="dashed"
+              icon={<ThunderboltOutlined />}
+              onClick={() => {
+                const v = form.getFieldsValue();
+                if (!v.title || !v.content) {
+                  message.warning('Cần có tiêu đề và nội dung trước');
+                  return;
+                }
+                setThuCong('seo');
+              }}
+            >
+              SEO thủ công
+            </Button>
+          </Tooltip>
+          <Tooltip title="Lấy prompt để tự chạy trên ChatGPT / Claude, rồi dán kết quả về — không tốn hạn mức AI">
+            <Button
+              size="small"
+              type="dashed"
+              icon={<ThunderboltOutlined />}
+              onClick={() => {
+                const v = form.getFieldsValue();
+                if (!v.title || !v.content) {
+                  message.warning('Cần có tiêu đề và nội dung trước');
+                  return;
+                }
+                setThuCong('improve');
+              }}
+            >
+              Cải thiện thủ công
+            </Button>
+          </Tooltip>
         </div>
       </Card>
 
@@ -551,6 +621,27 @@ export default function PostFormPage() {
       </Row>
 
       {/* Generate Modal */}
+
+      <AiThuCongModal
+        mo={thuCong === 'seo'}
+        onDong={() => setThuCong(null)}
+        tieuDe="Tối ưu SEO thủ công"
+        layPrompt={() => layPromptSeo(duLieuSeo())}
+        apDung={apDungTextSeo}
+        onXong={apDungKetQuaSeo}
+        moTaKetQua="AI sẽ trả về một khối JSON"
+      />
+
+      <AiThuCongModal
+        mo={thuCong === 'improve'}
+        onDong={() => setThuCong(null)}
+        tieuDe="Cải thiện nội dung thủ công"
+        layPrompt={() => layPromptImprove(duLieuImprove())}
+        apDung={apDungTextImprove}
+        onXong={apDungKetQuaImprove}
+        moTaKetQua="AI sẽ trả về phần ===EXCERPT=== rồi ===HTML==="
+      />
+
       <Modal
         title={
           <span>
