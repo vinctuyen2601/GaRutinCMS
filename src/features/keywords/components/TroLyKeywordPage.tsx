@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import {
   Card, Table, Tag, Button, Input, Modal, Space, Typography, Alert, message, Tooltip, Empty,
-  Segmented, Select,
+  Segmented, Select, Popover, Spin,
 } from 'antd';
 import {
   ImportOutlined, BulbOutlined, CheckOutlined, CloseOutlined, SearchOutlined, SyncOutlined,
-  StopOutlined, UndoOutlined,
+  StopOutlined, UndoOutlined, RobotOutlined, CopyOutlined, EditOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import useSWR from 'swr';
@@ -13,8 +13,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   getPhanTich, nhapSearchConsole, docDanSearchConsole,
   getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau, gopBai, doiBoQua,
+  soanBoSung, promptBoSung, applyBoSung,
   type BaiKhop,
-  type DongPhanTich, type ViecNenLam,
+  type DongPhanTich, type ViecNenLam, type KetQuaBoSung,
 } from '../services/tro-ly';
 import { getApiError } from '@/lib/error';
 
@@ -39,6 +40,34 @@ const VIEC: Record<ViecNenLam, { nhan: string; mau: string }> = {
   'bo-qua':       { nhan: 'Bỏ qua',        mau: 'default' },
 };
 
+/**
+ * Dàn ý của một bài, xem ngay tại bảng.
+ *
+ * Để trong popover chứ không trải thẳng vào dòng: bảng đang có 67 dòng "bổ
+ * sung", mỗi dòng tới 3 bài, mỗi bài 8 heading — trải hết là hơn 1.500 dòng
+ * chữ và chẳng ai đọc nổi. Rê chuột là thấy, vẫn nhanh hơn mở bài rất nhiều.
+ */
+function DanY({ bai }: { bai: BaiKhop }) {
+  if (!bai.danY?.length) {
+    return <Text type="secondary" className="text-xs ml-1">(bài chưa có mục nào)</Text>;
+  }
+  return (
+    <Popover
+      title={bai.title}
+      placement="right"
+      content={
+        <ol className="text-xs pl-4 !mb-0" style={{ maxWidth: 380 }}>
+          {bai.danY.map((h, i) => <li key={i}>{h}</li>)}
+        </ol>
+      }
+    >
+      <Text type="secondary" className="text-xs ml-1" style={{ cursor: 'help' }}>
+        · dàn ý {bai.danY.length} mục
+      </Text>
+    </Popover>
+  );
+}
+
 export default function TroLyKeywordPage() {
   const navigate = useNavigate();
   const [xemBoQua, setXemBoQua] = useState(false);
@@ -48,6 +77,11 @@ export default function TroLyKeywordPage() {
   );
   const [gop, setGop] = useState<DongPhanTich | null>(null);
   const [giuLai, setGiuLai] = useState<string>('');
+  const [boSung, setBoSung] = useState<DongPhanTich | null>(null);
+  const [dangSoan, setDangSoan] = useState(false);
+  const [ketQua, setKetQua] = useState<KetQuaBoSung | null>(null);
+  /** Bản dán tay, dùng khi API LLM hỏng. */
+  const [danTay, setDanTay] = useState('');
   const [dangGop, setDangGop] = useState(false);
   const { data: goiY = [], mutate: mutateGoiY } = useSWR('kw-goi-y', getGoiY);
   const [moNhap, setMoNhap] = useState(false);
@@ -151,6 +185,31 @@ export default function TroLyKeywordPage() {
     }
   };
 
+  /** Mở hộp soạn bổ sung và gọi AI luôn — mở ra rồi còn phải bấm nữa là thừa. */
+  const moBoSung = async (r: DongPhanTich) => {
+    setBoSung(r);
+    setKetQua(null);
+    setDanTay('');
+    setDangSoan(true);
+    try {
+      setKetQua(await soanBoSung(r.keyword, r.baiKhop.map((b) => b.slug)));
+    } catch (e) {
+      // Không đóng hộp: bên trong còn đường làm tay, đóng đi là mất luôn lối đó.
+      message.error(getApiError(e, 'AI không trả lời được — dùng cách dán tay bên dưới'));
+    } finally {
+      setDangSoan(false);
+    }
+  };
+
+  const chep = async (noiDung: string, nhan: string) => {
+    try {
+      await navigator.clipboard.writeText(noiDung);
+      message.success(`Đã chép ${nhan}`);
+    } catch {
+      message.error('Trình duyệt không cho chép — hãy bôi đen rồi Ctrl+C');
+    }
+  };
+
   const columns: ColumnsType<DongPhanTich> = [
     {
       title: 'Việc nên làm',
@@ -175,6 +234,7 @@ export default function TroLyKeywordPage() {
                   {/* Trỏ vào trang sửa bài trong CMS, không phải bài trên web:
                       từ bảng này người ta đi tới để SỬA, không phải để đọc. */}
                   <a onClick={() => navigate(`/posts/${b.id}/edit`)}>{b.title}</a>
+                  <DanY bai={b} />
                 </div>
               ))}
               {r.baiKhop.length > 4 && (
@@ -198,6 +258,17 @@ export default function TroLyKeywordPage() {
                   }}
                 >
                   Gộp {r.baiKhop.length} bài này
+                </Button>
+              )}
+              {/* Chỉ ở dòng "bổ sung": các dòng khác không có bài để chèn vào. */}
+              {r.viec === 'bo-sung' && (
+                <Button
+                  size="small"
+                  icon={<RobotOutlined />}
+                  className="mt-2"
+                  onClick={() => moBoSung(r)}
+                >
+                  Soạn phần bổ sung
                 </Button>
               )}
             </div>
@@ -553,6 +624,137 @@ export default function TroLyKeywordPage() {
                 {xemTruoc[0].position ? `, vị trí ${xemTruoc[0].position}` : ''}
               </div>
             )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={Boolean(boSung)}
+        onCancel={() => setBoSung(null)}
+        title={`Soạn phần bổ sung — "${boSung?.keyword ?? ''}"`}
+        width={800}
+        footer={
+          <Space>
+            <Button onClick={() => setBoSung(null)}>Đóng</Button>
+            {ketQua?.html && (
+              <Button
+                type="primary"
+                icon={<CopyOutlined />}
+                onClick={() => chep(ketQua.html, 'HTML phần bổ sung')}
+              >
+                Chép HTML
+              </Button>
+            )}
+            {ketQua?.slug && (
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => {
+                  const b = boSung?.baiKhop.find((x) => x.slug === ketQua.slug);
+                  if (b) navigate(`/posts/${b.id}/edit`);
+                  else message.warning('Không tìm thấy bài AI chọn trong danh sách');
+                }}
+              >
+                Mở bài để chèn
+              </Button>
+            )}
+          </Space>
+        }
+      >
+        {dangSoan && (
+          <div className="py-8 text-center">
+            <Spin />
+            <Text type="secondary" className="block mt-2 text-sm">
+              Đang đọc dàn ý {boSung?.baiKhop.length ?? 0} bài và soạn phần còn thiếu…
+            </Text>
+          </div>
+        )}
+
+        {!dangSoan && ketQua && (
+          ketQua.nenVietMoi ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="Không bài nào hợp để chèn thêm"
+              description={ketQua.lyDo || 'Từ khoá này nên viết bài mới thay vì nhét vào bài cũ.'}
+            />
+          ) : (
+            <>
+              <Alert
+                type="success"
+                showIcon
+                className="mb-3"
+                message={`Chèn vào bài: ${ketQua.tieuDeBai || ketQua.slug}`}
+                description={
+                  <>
+                    <div><b>Vị trí:</b> {ketQua.viTri || 'cuối bài'}</div>
+                    {ketQua.lyDo && <div className="mt-1">{ketQua.lyDo}</div>}
+                  </>
+                }
+              />
+              <Text strong className="block mb-1">Xem thử</Text>
+              <div
+                className="border rounded p-3 mb-3 text-sm"
+                style={{ maxHeight: 260, overflow: 'auto', background: '#fafafa' }}
+                /* Nội dung đã lọc thẻ ở backend (danh sách thẻ cho phép) trước
+                   khi tới đây; không lọc thì đây là lỗ XSS thật, vì chữ này do
+                   AI sinh ra rồi đem dán thẳng ra web công khai. */
+                dangerouslySetInnerHTML={{ __html: ketQua.html }}
+              />
+              <Text strong className="block mb-1">Mã HTML để chép</Text>
+              <Input.TextArea
+                rows={6}
+                value={ketQua.html}
+                readOnly
+                style={{ fontFamily: 'monospace', fontSize: 12 }}
+              />
+            </>
+          )
+        )}
+
+        {!dangSoan && (
+          <div className="mt-4 pt-3 border-t">
+            <Text type="secondary" className="text-xs block mb-2">
+              Gọi AI qua API hỏng hoặc hết hạn mức? Chép prompt sang chat AI bên ngoài
+              rồi dán kết quả JSON vào đây.
+            </Text>
+            <Space className="mb-2">
+              <Button
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={async () => {
+                  if (!boSung) return;
+                  try {
+                    const p = await promptBoSung(boSung.keyword, boSung.baiKhop.map((b) => b.slug));
+                    chep(p.prompt, 'prompt');
+                  } catch (e) {
+                    message.error(getApiError(e, 'Không lấy được prompt'));
+                  }
+                }}
+              >
+                Chép prompt
+              </Button>
+              <Button
+                size="small"
+                disabled={!danTay.trim()}
+                onClick={async () => {
+                  try {
+                    setKetQua(await applyBoSung(danTay));
+                    message.success('Đã đọc kết quả dán vào');
+                  } catch (e) {
+                    message.error(getApiError(e, 'Không đọc được kết quả — cần đúng dạng JSON'));
+                  }
+                }}
+              >
+                Đọc kết quả đã dán
+              </Button>
+            </Space>
+            <Input.TextArea
+              rows={3}
+              value={danTay}
+              onChange={(e) => setDanTay(e.target.value)}
+              placeholder='Dán JSON AI trả về, dạng {"slug":"...","html":"<h2>..."}'
+              style={{ fontFamily: 'monospace', fontSize: 12 }}
+            />
           </div>
         )}
       </Modal>

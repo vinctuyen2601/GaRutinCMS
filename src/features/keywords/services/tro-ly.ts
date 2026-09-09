@@ -4,7 +4,20 @@ export type ViecNenLam =
   | 'bo-sung'
   | 'viet-moi' | 'sua-tieu-de' | 'gop-bai' | 'da-tot' | 'bo-qua' | 'chua-du-lieu';
 
-export type BaiKhop = { id: string; slug: string; title: string; nguoiDoc: number };
+export type BaiKhop = {
+  id: string; slug: string; title: string; nguoiDoc: number;
+  /** Heading H2/H3 của bài — đủ để biết bài nói gì mà không phải mở ra. */
+  danY: string[];
+};
+
+export type KetQuaBoSung = {
+  slug: string;
+  tieuDeBai: string;
+  viTri: string;
+  html: string;
+  lyDo: string;
+  nenVietMoi: boolean;
+};
 
 export type DongPhanTich = {
   id: string;
@@ -125,3 +138,16 @@ export function docDanSearchConsole(text: string) {
   }
   return rows;
 }
+
+/** Nhờ AI soạn phần HTML còn thiếu cho một từ khoá. */
+export const soanBoSung = (keyword: string, slugs: string[]) =>
+  api.post<KetQuaBoSung>('/admin/keywords/bo-sung', { keyword, slugs }).then((r) => r.data);
+
+/** Đường làm tay: lấy prompt để dán sang chat AI bên ngoài. */
+export const promptBoSung = (keyword: string, slugs: string[]) =>
+  api.post<{ system: string; user: string; prompt: string }>(
+    '/admin/keywords/bo-sung/prompt', { keyword, slugs }).then((r) => r.data);
+
+/** Đường làm tay: dán kết quả từ chat ngoài vào để đọc ra. */
+export const applyBoSung = (text: string) =>
+  api.post<KetQuaBoSung>('/admin/keywords/bo-sung/apply', { text }).then((r) => r.data);
