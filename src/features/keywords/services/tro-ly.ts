@@ -41,8 +41,12 @@ export const dongBoSearchConsole = (soNgay = 90) =>
 export const getGoiY = () => api.get<GoiY[]>('/admin/keywords/goi-y').then((r) => r.data);
 
 export const timGoiY = (keyword: string) =>
-  api.post<{ them: number; cauHoi: number; lienQuan: number }>(
+  api.post<{ them: number; boQuaViDaCoBai: number; tuDong: number; cauHoi: number; lienQuan: number }>(
     '/admin/keywords/goi-y/tim', { keyword }).then((r) => r.data);
+
+export const quetSau = (soTuGoc = 12) =>
+  api.post<{ them: number; soTuGoc: number }>(
+    '/admin/keywords/goi-y/quet-sau', { soTuGoc }).then((r) => r.data);
 
 export const nhanGoiY = (id: string) =>
   api.post(`/admin/keywords/goi-y/${id}/nhan`).then((r) => r.data);

@@ -9,7 +9,7 @@ import type { ColumnsType } from 'antd/es/table';
 import useSWR from 'swr';
 import {
   getPhanTich, nhapSearchConsole, docDanSearchConsole,
-  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole,
+  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau,
   type DongPhanTich, type ViecNenLam,
 } from '../services/tro-ly';
 import { getApiError } from '@/lib/error';
@@ -41,6 +41,24 @@ export default function TroLyKeywordPage() {
   const [tuKhoaTim, setTuKhoaTim] = useState('');
   const [dangTim, setDangTim] = useState(false);
   const [dangDongBo, setDangDongBo] = useState(false);
+  const [dangQuet, setDangQuet] = useState(false);
+
+  const quet = async () => {
+    setDangQuet(true);
+    try {
+      const r = await quetSau(12);
+      message.success(
+        r.them
+          ? `Tìm được ${r.them} từ khoá còn thiếu, quét từ ${r.soTuGoc} từ khoá đang có`
+          : 'Không tìm thêm được từ khoá nào mới',
+      );
+      mutateGoiY();
+    } catch (e) {
+      message.error(getApiError(e, 'Quét thất bại'));
+    } finally {
+      setDangQuet(false);
+    }
+  };
   const { data: gsc } = useSWR('gsc-san-sang', gscSanSang);
 
   const dongBo = async () => {
@@ -211,6 +229,10 @@ export default function TroLyKeywordPage() {
         size="small"
         title={<><BulbOutlined className="mr-2" />Gợi ý từ khoá từ Google</>}
         extra={
+          <Space>
+            <Button onClick={quet} loading={dangQuet}>
+              Quét từ danh sách hiện có
+            </Button>
           <Space.Compact>
             <Input
               placeholder="Nhập một từ khoá để tìm gợi ý quanh nó"
@@ -221,12 +243,17 @@ export default function TroLyKeywordPage() {
             />
             <Button onClick={tim} loading={dangTim}>Tìm</Button>
           </Space.Compact>
+          </Space>
         }
       >
         <Paragraph type="secondary" className="text-xs !mb-3">
-          Lấy từ “Mọi người cũng hỏi” và “Tìm kiếm liên quan” của chính Google —
-          đây là câu hỏi <b>thật</b> người dùng gõ, nên mỗi câu là một tiêu đề bài
-          viết đã có sẵn nhu cầu.
+          Lấy từ <b>Google Autocomplete</b>, “Mọi người cũng hỏi” và “Tìm kiếm liên
+          quan” — đều là truy vấn <b>thật</b> người dùng gõ. Đây là chỗ Search
+          Console không trả lời được: nó chỉ thấy từ khoá website đã có mặt, còn
+          từ khoá bạn chưa xếp hạng ở đâu cả thì hoàn toàn vô hình với nó.
+          <br />
+          Danh sách dưới đây <b>đã lọc bỏ</b> những từ khoá đã có bài nhắm vào —
+          chỉ còn chỗ đang thiếu.
         </Paragraph>
         {goiY.length === 0 ? (
           <Empty description="Chưa có gợi ý nào" image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -235,7 +262,11 @@ export default function TroLyKeywordPage() {
             {goiY.map((g) => (
               <Tag
                 key={g.id}
-                color={g.loai === 'cau-hoi' ? 'purple' : 'blue'}
+                color={
+                  g.loai === 'cau-hoi' ? 'purple'
+                    : g.loai === 'tu-dong' ? 'cyan'
+                    : 'blue'
+                }
                 className="py-1 px-2"
               >
                 {g.keyword}
