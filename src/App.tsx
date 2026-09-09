@@ -21,6 +21,7 @@ const AiPromptsPage       = lazy(() => import('@/features/ai-prompts/components/
 const PostTemplatesPage   = lazy(() => import('@/features/post-templates/components/PostTemplatesPage'));
 const SiteConfigPage      = lazy(() => import('@/features/site-config/components/SiteConfigPage'));
 const KeywordsPage        = lazy(() => import('@/features/keywords/components/KeywordsPage'));
+const TroLyKeywordPage    = lazy(() => import('@/features/keywords/components/TroLyKeywordPage'));
 const AnalyticsPage       = lazy(() => import('@/features/analytics/components/AnalyticsPage'));
 const BusinessReportPage  = lazy(() => import('@/features/analytics/components/BusinessReportPage'));
 const CustomersPage       = lazy(() => import('@/features/customers/components/CustomersPage'));
@@ -66,7 +67,8 @@ export default function App() {
           <Route path="/ai-prompts"        element={<PrivateLayout><AiPromptsPage /></PrivateLayout>} />
           <Route path="/post-templates"    element={<PrivateLayout><PostTemplatesPage /></PrivateLayout>} />
           <Route path="/site-config"       element={<PrivateLayout><SiteConfigPage /></PrivateLayout>} />
-          <Route path="/keywords"          element={<PrivateLayout><KeywordsPage /></PrivateLayout>} />
+          <Route path="/keywords"          element={<PrivateLayout><TroLyKeywordPage /></PrivateLayout>} />
+          <Route path="/keywords-cu" element={<PrivateLayout><KeywordsPage /></PrivateLayout>} />
           <Route path="/analytics"         element={<PrivateLayout><AnalyticsPage /></PrivateLayout>} />
           <Route path="/reports"           element={<PrivateLayout><BusinessReportPage /></PrivateLayout>} />
           <Route path="/customers"         element={<PrivateLayout><CustomersPage /></PrivateLayout>} />
