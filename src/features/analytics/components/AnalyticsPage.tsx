@@ -490,8 +490,11 @@ export default function AnalyticsPage() {
             • <b>Vào đặt hàng rồi vẫn không thành đơn</b> → vướng ở chính khâu đặt hàng.<br />
             Cột <b>Đã bán</b> đếm từ đơn hàng thật. <b>Tỉ lệ mua</b> chỉ tính đơn đặt qua web —
             đơn chốt qua Zalo hoặc điện thoại không được tính vào đây.<br />
-            Sản phẩm không ai xem <i>và</i> không bán được món nào thì được ẩn khỏi bảng. Sản phẩm
-            có bán nhưng chưa ai xem vẫn hiện — đó thường là đơn chốt qua Zalo.<br />
+            Sản phẩm chỉ bị ẩn khỏi bảng khi không có <i>bất kỳ</i> dấu hiệu nào: không ai xem,
+            không ai thêm giỏ, không ai mang sang trang đặt hàng, và cũng không bán được món nào.<br />
+            Có thể gặp <b>0 khách xem nhưng vẫn có thêm giỏ</b> — nút thêm giỏ nằm ngay trên thẻ sản
+            phẩm ở trang danh sách, trang chủ và luồng video, nên khách mua được mà chưa từng mở
+            trang chi tiết. Sản phẩm có bán nhưng chưa ai xem thường là đơn chốt qua Zalo.<br />
             Ba cột <b>Khách xem · Thêm giỏ · Vào đặt hàng</b> chỉ tính lượt truy cập kể từ khi bật đo
             hành vi, nên chúng luôn so sánh được với nhau. Cột <b>Đã bán</b> đếm mọi đơn trong kỳ,
             kể cả đơn cũ — nên một sản phẩm có thể "đã bán" mà chưa có bước thêm giỏ nào.
