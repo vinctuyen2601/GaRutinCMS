@@ -5,13 +5,14 @@ import {
 } from 'antd';
 import {
   ImportOutlined, BulbOutlined, CheckOutlined, CloseOutlined, SearchOutlined, SyncOutlined,
+  StopOutlined, UndoOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import useSWR from 'swr';
 import { useNavigate } from 'react-router-dom';
 import {
   getPhanTich, nhapSearchConsole, docDanSearchConsole,
-  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau, gopBai,
+  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau, gopBai, doiBoQua,
   type BaiKhop,
   type DongPhanTich, type ViecNenLam,
 } from '../services/tro-ly';
@@ -36,7 +37,11 @@ const VIEC: Record<ViecNenLam, { nhan: string; mau: string }> = {
 
 export default function TroLyKeywordPage() {
   const navigate = useNavigate();
-  const { data: rows = [], isLoading, mutate } = useSWR('kw-phan-tich', getPhanTich);
+  const [xemBoQua, setXemBoQua] = useState(false);
+  const { data: rows = [], isLoading, mutate } = useSWR(
+    ['kw-phan-tich', xemBoQua],
+    () => getPhanTich(xemBoQua),
+  );
   const [gop, setGop] = useState<DongPhanTich | null>(null);
   const [giuLai, setGiuLai] = useState<string>('');
   const [dangGop, setDangGop] = useState(false);
@@ -218,6 +223,35 @@ export default function TroLyKeywordPage() {
         ),
     },
     {
+      title: '',
+      key: 'boQua',
+      width: 46,
+      render: (_: unknown, r: DongPhanTich) =>
+        r.daBoQua ? (
+          <Tooltip title={`Đã bỏ qua${r.lyDoBoQua ? `: ${r.lyDoBoQua}` : ''} — bấm để nhận lại`}>
+            <Button
+              size="small"
+              type="text"
+              icon={<UndoOutlined />}
+              onClick={async () => { await doiBoQua(r.id, false); mutate(); }}
+            />
+          </Tooltip>
+        ) : (
+          <Tooltip title="Bỏ qua từ khoá này — không liên quan tới việc kinh doanh">
+            <Button
+              size="small"
+              type="text"
+              icon={<StopOutlined />}
+              onClick={async () => {
+                await doiBoQua(r.id, true);
+                message.success(`Đã bỏ qua "${r.keyword}"`);
+                mutate();
+              }}
+            />
+          </Tooltip>
+        ),
+    },
+    {
       title: 'Vị trí',
       dataIndex: 'position',
       width: 80,
@@ -284,6 +318,14 @@ export default function TroLyKeywordPage() {
           onChange={(e) => setTimBang(e.target.value)}
           style={{ width: 220 }}
         />
+        <Button
+          size="small"
+          type={xemBoQua ? 'primary' : 'default'}
+          icon={<StopOutlined />}
+          onClick={() => setXemBoQua(!xemBoQua)}
+        >
+          {xemBoQua ? 'Đang hiện cả từ khoá đã bỏ qua' : 'Xem từ khoá đã bỏ qua'}
+        </Button>
         <Space size={4}>
           <Text type="secondary" className="text-xs">Từ</Text>
           <Select

@@ -14,6 +14,8 @@ export type DongPhanTich = {
   ctr: number | null;
   nguon: string;
   ghiChu: string | null;
+  daBoQua: boolean;
+  lyDoBoQua: string | null;
   viec: ViecNenLam;
   lyDo: string;
   baiKhop: BaiKhop[];
@@ -27,8 +29,12 @@ export const gopBai = (giuLai: string, gopVao: string[]) =>
   api.post<{ daGop: string[]; loi: { slug: string; lyDo: string }[] }>(
     '/admin/posts/gop', { giuLai, gopVao }).then((r) => r.data);
 
-export const getPhanTich = () =>
-  api.get<DongPhanTich[]>('/admin/keywords/phan-tich').then((r) => r.data);
+export const getPhanTich = (boQua = false) =>
+  api.get<DongPhanTich[]>('/admin/keywords/phan-tich', { params: { boQua } })
+    .then((r) => r.data);
+
+export const doiBoQua = (id: string, boQua: boolean, lyDo?: string) =>
+  api.patch(`/admin/keywords/${id}/bo-qua`, { boQua, lyDo }).then((r) => r.data);
 
 export const nhapSearchConsole = (
   rows: { keyword: string; impressions: number; clicks: number; position?: number }[],
