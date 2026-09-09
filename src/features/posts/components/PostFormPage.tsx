@@ -488,6 +488,25 @@ export default function PostFormPage() {
           <Form.Item label="Slug (URL)" name="slug" rules={[{ required: true }]}>
             <Input placeholder="huong-dan-nuoi-ga-rutin" />
           </Form.Item>
+          {/* Gộp bài trùng: bài này sẽ chuyển hướng 301 sang bài đích và không
+              còn hiện nội dung của mình nữa. Đặt cạnh các trường nội dung vì đây
+              là quyết định về SỐ PHẬN bài viết, không phải tuỳ chọn SEO phụ. */}
+          <Form.Item
+            name="redirectTo"
+            label="Gộp bài này sang bài khác"
+            tooltip="Dùng khi nhiều bài cùng nhắm một từ khoá. Bài này sẽ chuyển hướng 301 sang bài đích, tín hiệu SEO dồn về đó thay vì bị chia nhỏ. Khác với xoá: xoá tạo trang 404 và mất hết những gì bài cũ tích luỹ."
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Để trống nếu đây là bài bình thường"
+              style={{ maxWidth: 560 }}
+              options={(posts as { id: string; slug: string; title: string; redirectTo?: string | null }[])
+                .filter((p) => p.id !== id && !p.redirectTo)
+                .map((p) => ({ value: p.slug, label: p.title }))}
+            />
+          </Form.Item>
           <Form.Item label="Tóm tắt" name="excerpt">
             <TextArea rows={2} placeholder="Tóm tắt ngắn hiển thị trong danh sách..." />
           </Form.Item>

@@ -26,6 +26,8 @@ export type Post = {
    * mà bấm vào không xoá được gì.
    */
   templateId?: string | null;
+  /** Slug bài đích khi bài này đã được gộp sang bài khác. Null = bài bình thường. */
+  redirectTo?: string | null;
   createdAt: string;
   updatedAt: string;
 };

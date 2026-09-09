@@ -10,7 +10,7 @@ import { getActiveKeyword, crawlToDrafts } from '@/features/keywords/services';
 import { getApiError } from '@/lib/error';
 import { getVisitTable } from '@/features/analytics/services';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 /** Một dòng của bảng lượt truy cập, gom theo đường dẫn. */
 type DongTruyCap = { path: string; visits: number; uniqueVisitors: number };
@@ -94,9 +94,20 @@ export default function PostsPage() {
       title: 'Tiêu đề',
       dataIndex: 'title',
       key: 'title',
-      render: (title: string, r: Post) => (
-        <a onClick={() => navigate(`/posts/${r.id}/edit`)}>{title}</a>
-      ),
+              render: (title: string, r: Post) => (
+          <Space direction="vertical" size={0}>
+            <a onClick={() => navigate(`/posts/${r.id}/edit`)}>{title}</a>
+            {/* Bài đã gộp không còn hiện trên web nữa — phải thấy ngay ở danh
+                sách, nếu không sẽ có người sửa nội dung một bài mà không ai
+                đọc được. */}
+            {r.redirectTo && (
+              <Text type="secondary" className="text-xs">
+                <Tag color="purple" className="mr-1">đã gộp</Tag>
+                chuyển hướng → {r.redirectTo}
+              </Text>
+            )}
+          </Space>
+        ),
     },
     {
       title: 'Danh mục',
