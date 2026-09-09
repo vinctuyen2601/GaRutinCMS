@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Card, Table, Tag, Button, Input, Modal, Space, Typography, Alert, message, Tooltip, Empty,
+  Segmented, Select,
 } from 'antd';
 import {
   ImportOutlined, BulbOutlined, CheckOutlined, CloseOutlined, SearchOutlined, SyncOutlined,
@@ -42,6 +43,17 @@ export default function TroLyKeywordPage() {
   const [dangTim, setDangTim] = useState(false);
   const [dangDongBo, setDangDongBo] = useState(false);
   const [dangQuet, setDangQuet] = useState(false);
+  const [locViec, setLocViec] = useState<ViecNenLam | 'tat-ca'>('tat-ca');
+  const [timBang, setTimBang] = useState('');
+  /*
+   * Ngưỡng lượt hiển thị, mặc định 5.
+   *
+   * Bảng có 195 từ khoá nhưng chỉ 34 cái đạt từ 20 lượt hiển thị — phần còn lại
+   * là đuôi dài một hai lượt, đọc hết chỉ tốn thời gian mà không đổi quyết định
+   * gì. Mặc định cắt ở 5 (còn 73 dòng), và LUÔN hiện rõ đang ẩn bao nhiêu để
+   * không ai tưởng đó là toàn bộ dữ liệu.
+   */
+  const [nguong, setNguong] = useState(5);
 
   const quet = async () => {
     setDangQuet(true);
@@ -77,6 +89,16 @@ export default function TroLyKeywordPage() {
   };
 
   const xemTruoc = docDanSearchConsole(danText);
+
+  // Giữ nguyên thứ tự ưu tiên từ máy chủ — nó đã xếp việc đáng làm lên đầu.
+  const khongDau = (x: string) =>
+    x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const loc = rows.filter(
+    (r) =>
+      (locViec === 'tat-ca' || r.viec === locViec) &&
+      (r.impressions ?? 0) >= nguong &&
+      (!timBang.trim() || khongDau(r.keyword).includes(khongDau(timBang.trim()))),
+  );
 
   const nhap = async () => {
     if (!xemTruoc.length) {
@@ -216,13 +238,59 @@ export default function TroLyKeywordPage() {
         />
       )}
 
+      <Space wrap className="w-full">
+        <Segmented
+          value={locViec}
+          onChange={(v) => setLocViec(v as ViecNenLam | 'tat-ca')}
+          options={[
+            { label: `Tất cả (${rows.length})`, value: 'tat-ca' },
+            // Chỉ hiện nhóm có dòng: nút "Gộp bài (0)" bấm vào ra bảng trống
+            // chỉ làm người dùng tưởng hỏng.
+            ...(Object.keys(VIEC) as ViecNenLam[])
+              .filter((v) => rows.some((r) => r.viec === v))
+              .map((v) => ({
+                label: `${VIEC[v].nhan} (${rows.filter((r) => r.viec === v).length})`,
+                value: v,
+              })),
+          ]}
+        />
+        <Input.Search
+          placeholder="Tìm từ khoá"
+          allowClear
+          value={timBang}
+          onChange={(e) => setTimBang(e.target.value)}
+          style={{ width: 220 }}
+        />
+        <Space size={4}>
+          <Text type="secondary" className="text-xs">Từ</Text>
+          <Select
+            size="small"
+            value={nguong}
+            onChange={setNguong}
+            style={{ width: 92 }}
+            options={[0, 3, 5, 10, 20, 50].map((n) => ({
+              value: n,
+              label: n === 0 ? 'tất cả' : `${n} lượt`,
+            }))}
+          />
+          <Text type="secondary" className="text-xs">hiển thị trở lên</Text>
+        </Space>
+      </Space>
+
+      {rows.length > loc.length && (
+        <Text type="secondary" className="text-xs block">
+          Đang ẩn {rows.length - loc.length} từ khoá không khớp bộ lọc
+          {nguong > 0 && ` (phần lớn là đuôi dài dưới ${nguong} lượt hiển thị)`}.
+        </Text>
+      )}
+
       <Table<DongPhanTich>
         rowKey="id"
         loading={isLoading}
-        dataSource={rows}
+        dataSource={loc}
         columns={columns}
         size="small"
-        pagination={false}
+        pagination={loc.length > 25 ? { pageSize: 25, showSizeChanger: false } : false}
       />
 
       <Card
