@@ -246,6 +246,9 @@ const MAU_LOAI: Record<string, string> = {
   'quảng cáo': 'red',
   'chiến dịch': 'purple',
   'tự nhiên (SEO)': 'green',
+  // Kênh riêng, không phải "giới thiệu" thường: khách từ ChatGPT đến với câu
+  // hỏi đã được trả lời sẵn, hành vi khác hẳn người bấm một cái link.
+  'trợ lý AI': 'geekblue',
   'giới thiệu': 'blue',
   'trực tiếp': 'default',
 };
