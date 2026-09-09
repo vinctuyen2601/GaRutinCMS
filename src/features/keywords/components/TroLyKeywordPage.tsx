@@ -8,15 +8,16 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import useSWR from 'swr';
+import { useNavigate } from 'react-router-dom';
 import {
   getPhanTich, nhapSearchConsole, docDanSearchConsole,
-  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau,
+  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole, quetSau, gopBai,
+  type BaiKhop,
   type DongPhanTich, type ViecNenLam,
 } from '../services/tro-ly';
 import { getApiError } from '@/lib/error';
 
 const { Title, Text, Paragraph } = Typography;
-const WEB_URL = 'https://garutin.com';
 
 /**
  * Nhãn cho từng việc nên làm.
@@ -34,7 +35,11 @@ const VIEC: Record<ViecNenLam, { nhan: string; mau: string }> = {
 };
 
 export default function TroLyKeywordPage() {
+  const navigate = useNavigate();
   const { data: rows = [], isLoading, mutate } = useSWR('kw-phan-tich', getPhanTich);
+  const [gop, setGop] = useState<DongPhanTich | null>(null);
+  const [giuLai, setGiuLai] = useState<string>('');
+  const [dangGop, setDangGop] = useState(false);
   const { data: goiY = [], mutate: mutateGoiY } = useSWR('kw-goi-y', getGoiY);
   const [moNhap, setMoNhap] = useState(false);
   const [danText, setDanText] = useState('');
@@ -158,15 +163,33 @@ export default function TroLyKeywordPage() {
                   <Tag color={b.nguoiDoc > 0 ? 'blue' : 'default'} className="mr-1">
                     {b.nguoiDoc} đọc
                   </Tag>
-                  <a href={`${WEB_URL}/blog/${b.slug}`} target="_blank" rel="noreferrer">
-                    {b.title}
-                  </a>
+                  {/* Trỏ vào trang sửa bài trong CMS, không phải bài trên web:
+                      từ bảng này người ta đi tới để SỬA, không phải để đọc. */}
+                  <a onClick={() => navigate(`/posts/${b.id}/edit`)}>{b.title}</a>
                 </div>
               ))}
               {r.baiKhop.length > 4 && (
                 <Text type="secondary" className="text-xs">
                   …và {r.baiKhop.length - 4} bài nữa
                 </Text>
+              )}
+              {/* Chỉ hiện nút gộp ở dòng thật sự có bài trùng — các dòng khác
+                  không có gì để gộp, thêm nút chỉ làm rối. */}
+              {r.viec === 'gop-bai' && (
+                <Button
+                  size="small"
+                  type="primary"
+                  className="mt-2"
+                  onClick={() => {
+                    // Mặc định giữ bài nhiều người đọc nhất: nó đang có thứ hạng
+                    // và độc giả, gộp ngược lại là vứt đi thứ đang chạy được.
+                    const tot = [...r.baiKhop].sort((a, b) => b.nguoiDoc - a.nguoiDoc)[0];
+                    setGiuLai(tot?.slug ?? '');
+                    setGop(r);
+                  }}
+                >
+                  Gộp {r.baiKhop.length} bài này
+                </Button>
               )}
             </div>
           )}
@@ -373,6 +396,74 @@ export default function TroLyKeywordPage() {
           bài viết ra sẽ nhập vào nhóm chưa ai đọc.
         </Paragraph>
       </Card>
+
+      <Modal
+        open={Boolean(gop)}
+        onCancel={() => setGop(null)}
+        title={`Gộp bài trùng — "${gop?.keyword ?? ''}"`}
+        width={720}
+        okText={`Gộp ${Math.max(0, (gop?.baiKhop.length ?? 1) - 1)} bài`}
+        confirmLoading={dangGop}
+        okButtonProps={{ disabled: !giuLai || (gop?.baiKhop.length ?? 0) < 2 }}
+        onOk={async () => {
+          if (!gop || !giuLai) return;
+          setDangGop(true);
+          try {
+            const bo = gop.baiKhop.filter((b) => b.slug !== giuLai).map((b) => b.slug);
+            const kq = await gopBai(giuLai, bo);
+            if (kq.loi.length) {
+              message.warning(
+                `Gộp được ${kq.daGop.length} bài, ${kq.loi.length} bài không được: ` +
+                  kq.loi.map((l) => `${l.slug} (${l.lyDo})`).join('; '),
+              );
+            } else {
+              message.success(`Đã gộp ${kq.daGop.length} bài về "${giuLai}"`);
+            }
+            setGop(null);
+            mutate();
+          } catch (e) {
+            message.error(getApiError(e, 'Gộp thất bại'));
+          } finally {
+            setDangGop(false);
+          }
+        }}
+      >
+        <Alert
+          type="warning"
+          showIcon
+          className="mb-3"
+          message="Các bài được gộp sẽ chuyển hướng 301 về bài giữ lại"
+          description="Chúng không còn hiện trên web, nhưng KHÔNG bị xoá — mọi tín hiệu SEO dồn về bài giữ lại, và hoàn tác được bằng cách xoá ô chuyển hướng trong trang sửa bài."
+        />
+        <Text strong className="block mb-2">Giữ lại bài nào?</Text>
+        <div className="space-y-1">
+          {[...(gop?.baiKhop ?? [])]
+            .sort((a: BaiKhop, b: BaiKhop) => b.nguoiDoc - a.nguoiDoc)
+            .map((b: BaiKhop) => (
+              <div
+                key={b.slug}
+                onClick={() => setGiuLai(b.slug)}
+                style={{
+                  cursor: 'pointer',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  border: `1px solid ${giuLai === b.slug ? '#1677ff' : '#f0f0f0'}`,
+                  background: giuLai === b.slug ? '#e6f4ff' : '#fff',
+                }}
+              >
+                <Space>
+                  <Tag color={b.nguoiDoc > 0 ? 'blue' : 'default'}>{b.nguoiDoc} đọc</Tag>
+                  <Text strong={giuLai === b.slug}>{b.title}</Text>
+                  {giuLai === b.slug && <Tag color="green">giữ lại</Tag>}
+                </Space>
+              </div>
+            ))}
+        </div>
+        <Text type="secondary" className="text-xs block mt-2">
+          Mặc định chọn bài nhiều người đọc nhất — nó đang có thứ hạng và độc giả,
+          gộp ngược lại là vứt đi thứ đang chạy được.
+        </Text>
+      </Modal>
 
       <Modal
         open={moNhap}

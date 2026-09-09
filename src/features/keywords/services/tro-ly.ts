@@ -3,7 +3,7 @@ import api from '@/lib/axios';
 export type ViecNenLam =
   | 'viet-moi' | 'sua-tieu-de' | 'gop-bai' | 'da-tot' | 'bo-qua' | 'chua-du-lieu';
 
-export type BaiKhop = { slug: string; title: string; nguoiDoc: number };
+export type BaiKhop = { id: string; slug: string; title: string; nguoiDoc: number };
 
 export type DongPhanTich = {
   id: string;
@@ -22,6 +22,10 @@ export type DongPhanTich = {
 export type GoiY = {
   id: string; keyword: string; tuKhoaGoc: string | null; loai: string;
 };
+
+export const gopBai = (giuLai: string, gopVao: string[]) =>
+  api.post<{ daGop: string[]; loi: { slug: string; lyDo: string }[] }>(
+    '/admin/posts/gop', { giuLai, gopVao }).then((r) => r.data);
 
 export const getPhanTich = () =>
   api.get<DongPhanTich[]>('/admin/keywords/phan-tich').then((r) => r.data);
