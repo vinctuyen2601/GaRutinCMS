@@ -1,6 +1,7 @@
 import api from '@/lib/axios';
 
 export type ViecNenLam =
+  | 'bo-sung'
   | 'viet-moi' | 'sua-tieu-de' | 'gop-bai' | 'da-tot' | 'bo-qua' | 'chua-du-lieu';
 
 export type BaiKhop = { id: string; slug: string; title: string; nguoiDoc: number };

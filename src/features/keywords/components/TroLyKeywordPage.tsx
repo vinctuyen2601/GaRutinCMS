@@ -28,6 +28,10 @@ const { Title, Text, Paragraph } = Typography;
  */
 const VIEC: Record<ViecNenLam, { nhan: string; mau: string }> = {
   'gop-bai':      { nhan: 'Gộp bài trùng', mau: 'red' },
+  // Bổ sung màu xanh dương chứ không phải cam như viết mới: nó là việc NHẸ hơn
+  // — sửa một bài đã có, không phải đẻ thêm bài. Cùng màu sẽ khiến người dùng
+  // coi hai việc nặng như nhau và ngại làm.
+  'bo-sung':      { nhan: 'Bổ sung bài cũ', mau: 'blue' },
   'viet-moi':     { nhan: 'Viết bài mới',  mau: 'orange' },
   'sua-tieu-de':  { nhan: 'Sửa tiêu đề',   mau: 'gold' },
   'chua-du-lieu': { nhan: 'Thiếu số liệu', mau: 'default' },
@@ -426,8 +430,14 @@ export default function TroLyKeywordPage() {
           nhất, nên xếp lên đầu.
         </Paragraph>
         <Paragraph className="!mb-2 text-sm">
-          <Tag color="orange">Viết bài mới</Tag> Có người tìm mà chưa có bài nào
-          nhắm vào — nhu cầu đang bỏ không, và là việc dễ nhất.
+          <Tag color="blue">Bổ sung bài cũ</Tag> Nội dung đã nằm sẵn trong thân một
+          bài, chỉ là tiêu đề chưa nhắm vào từ khoá. Thêm một mục và đưa cụm từ vào
+          tiêu đề hoặc H2 — rẻ hơn và ít rủi ro hơn viết bài mới rất nhiều.
+        </Paragraph>
+        <Paragraph className="!mb-2 text-sm">
+          <Tag color="orange">Viết bài mới</Tag> Không bài nào <b>nhắc tới</b> từ
+          khoá này. Kiểm lại xem có phải gõ sai chính tả hay truy vấn lạc ngành
+          không — phần lớn dòng ở nhóm này là vậy.
         </Paragraph>
         <Paragraph className="!mb-2 text-sm">
           <Tag color="gold">Sửa tiêu đề</Tag> Đã có hạng trên trang 1 nhưng ít người
