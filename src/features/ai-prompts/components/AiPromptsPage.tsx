@@ -9,6 +9,9 @@ import { getApiError } from '@/lib/error';
 
 const { Title, Text, Paragraph } = Typography;
 
+/** Thứ tự nhóm hiển thị — đặt tay để phần hay dùng nhất nằm trên. */
+const NHOM = ['Bài viết', 'Cấu trúc bài viết', 'Sản phẩm'];
+
 /**
  * Sửa prompt AI mà không phải deploy lại máy chủ.
  *
@@ -140,22 +143,36 @@ export default function AiPromptsPage() {
       </Paragraph>
 
       <Spin spinning={isLoading}>
-        <Collapse
-          accordion
-          items={prompts.map((p) => ({
-            key: p.key,
-            label: (
-              <Space>
-                <b>{p.nhan}</b>
-                {p.daSua
-                  ? <Tag color="orange">đã sửa</Tag>
-                  : <Tag>mặc định</Tag>}
-                <Text type="secondary" className="text-xs font-mono">{p.key}</Text>
-              </Space>
-            ),
-            children: <MotPrompt p={p} onXong={() => mutate()} />,
-          }))}
-        />
+        {/* Gom theo nhóm: 19 prompt để phẳng thì không tìm nổi cái cần sửa. */}
+        {NHOM.filter((n) => prompts.some((p) => p.nhom === n)).map((nhom) => (
+          <div key={nhom} className="mb-4">
+            <Text strong className="block mb-2">
+              {nhom}
+              <Text type="secondary" className="text-xs font-normal ml-2">
+                {prompts.filter((p) => p.nhom === nhom).length} mục
+                {prompts.some((p) => p.nhom === nhom && p.daSua)
+                  ? ` · ${prompts.filter((p) => p.nhom === nhom && p.daSua).length} đã sửa`
+                  : ''}
+              </Text>
+            </Text>
+            <Collapse
+              accordion
+              items={prompts
+                .filter((p) => p.nhom === nhom)
+                .map((p) => ({
+                  key: p.key,
+                  label: (
+                    <Space>
+                      <b>{p.nhan}</b>
+                      {p.daSua ? <Tag color="orange">đã sửa</Tag> : <Tag>mặc định</Tag>}
+                      <Text type="secondary" className="text-xs font-mono">{p.key}</Text>
+                    </Space>
+                  ),
+                  children: <MotPrompt p={p} onXong={() => mutate()} />,
+                }))}
+            />
+          </div>
+        ))}
       </Spin>
 
       <Card size="small" title="Nên biết trước khi sửa">
@@ -165,6 +182,13 @@ export default function AiPromptsPage() {
           <code> SUMMARY: </code>, <code> ===EXCERPT=== </code>, <code> ===HTML=== </code>.
           Xoá mấy dòng đó thì hệ thống không đọc được kết quả và báo lỗi
           “AI trả về dữ liệu không hợp lệ”.
+        </Paragraph>
+        <Paragraph className="!mb-2 text-sm">
+          <b>Nhóm “Cấu trúc bài viết”</b> là 10 khuôn bài bạn chọn ở ô “Cấu trúc”
+          trong trang soạn bài. Nội dung mỗi khuôn THAY THẾ ba quy tắc mặc định
+          về FAQ, CTA và internal link — nên ví dụ khuôn “Danh sách Top N” cố ý
+          không có FAQ. Sửa khuôn ở đây là đổi luôn cách AI viết cho mọi bài
+          dùng khuôn đó.
         </Paragraph>
         <Paragraph className="!mb-0 text-sm">
           <b>Sai thì không mất gì.</b> Bản mặc định luôn nằm trong mã nguồn, bấm

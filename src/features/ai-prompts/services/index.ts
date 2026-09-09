@@ -4,6 +4,7 @@ export type BienChoPhep = { ten: string; giaiThich: string };
 
 export type PromptItem = {
   key: string;
+  nhom: string;
   nhan: string;
   moTa: string;
   bien: BienChoPhep[];
