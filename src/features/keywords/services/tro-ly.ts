@@ -31,6 +31,13 @@ export const nhapSearchConsole = (
 ) => api.post<{ them: number; capNhat: number; tong: number }>(
   '/admin/keywords/nhap-search-console', { rows }).then((r) => r.data);
 
+export const gscSanSang = () =>
+  api.get<{ sanSang: boolean }>('/admin/keywords/gsc-san-sang').then((r) => r.data);
+
+export const dongBoSearchConsole = (soNgay = 90) =>
+  api.post<{ them: number; capNhat: number; tong: number; soNgay: number }>(
+    '/admin/keywords/dong-bo-search-console', { soNgay }).then((r) => r.data);
+
 export const getGoiY = () => api.get<GoiY[]>('/admin/keywords/goi-y').then((r) => r.data);
 
 export const timGoiY = (keyword: string) =>

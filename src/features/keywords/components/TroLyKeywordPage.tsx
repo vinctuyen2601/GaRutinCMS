@@ -3,13 +3,13 @@ import {
   Card, Table, Tag, Button, Input, Modal, Space, Typography, Alert, message, Tooltip, Empty,
 } from 'antd';
 import {
-  ImportOutlined, BulbOutlined, CheckOutlined, CloseOutlined, SearchOutlined,
+  ImportOutlined, BulbOutlined, CheckOutlined, CloseOutlined, SearchOutlined, SyncOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import useSWR from 'swr';
 import {
   getPhanTich, nhapSearchConsole, docDanSearchConsole,
-  getGoiY, timGoiY, nhanGoiY, boQuaGoiY,
+  getGoiY, timGoiY, nhanGoiY, boQuaGoiY, gscSanSang, dongBoSearchConsole,
   type DongPhanTich, type ViecNenLam,
 } from '../services/tro-ly';
 import { getApiError } from '@/lib/error';
@@ -40,6 +40,23 @@ export default function TroLyKeywordPage() {
   const [dangNhap, setDangNhap] = useState(false);
   const [tuKhoaTim, setTuKhoaTim] = useState('');
   const [dangTim, setDangTim] = useState(false);
+  const [dangDongBo, setDangDongBo] = useState(false);
+  const { data: gsc } = useSWR('gsc-san-sang', gscSanSang);
+
+  const dongBo = async () => {
+    setDangDongBo(true);
+    try {
+      const r = await dongBoSearchConsole(90);
+      message.success(
+        `Đã lấy ${r.tong} truy vấn của ${r.soNgay} ngày — thêm mới ${r.them}, cập nhật ${r.capNhat}`,
+      );
+      mutate();
+    } catch (e) {
+      message.error(getApiError(e, 'Đồng bộ thất bại'));
+    } finally {
+      setDangDongBo(false);
+    }
+  };
 
   const xemTruoc = docDanSearchConsole(danText);
 
@@ -152,9 +169,22 @@ export default function TroLyKeywordPage() {
         <Title level={4} className="!mb-0">
           <SearchOutlined className="mr-2" />Từ khoá &amp; SEO
         </Title>
-        <Button type="primary" icon={<ImportOutlined />} onClick={() => setMoNhap(true)}>
-          Nhập số liệu Search Console
-        </Button>
+        <Space>
+          {gsc?.sanSang && (
+            <Button type="primary" icon={<SyncOutlined />} onClick={dongBo} loading={dangDongBo}>
+              Đồng bộ Search Console
+            </Button>
+          )}
+          {/* Nhập tay vẫn giữ: dùng khi chưa cấu hình service account, hoặc khi
+              muốn nhập số liệu của một khoảng thời gian khác 90 ngày. */}
+          <Button
+            type={gsc?.sanSang ? 'default' : 'primary'}
+            icon={<ImportOutlined />}
+            onClick={() => setMoNhap(true)}
+          >
+            Nhập tay
+          </Button>
+        </Space>
       </div>
 
       {rows.every((r) => r.impressions == null) && (
@@ -162,7 +192,9 @@ export default function TroLyKeywordPage() {
           type="warning"
           showIcon
           message="Chưa có số liệu nhu cầu"
-          description="Không có lượt hiển thị thì bảng này chỉ là danh sách gõ tay, không quyết định được gì. Mở Search Console → Hiệu suất → Truy vấn, chọn hết rồi dán vào đây."
+          description={gsc?.sanSang
+            ? 'Bấm "Đồng bộ Search Console" để lấy số liệu 90 ngày gần nhất.'
+            : 'Không có lượt hiển thị thì bảng này chỉ là danh sách gõ tay, không quyết định được gì. Mở Search Console → Hiệu suất → Truy vấn, chọn hết rồi dán vào đây.'}
         />
       )}
 
