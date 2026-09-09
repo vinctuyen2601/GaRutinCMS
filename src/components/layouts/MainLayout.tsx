@@ -17,6 +17,7 @@ import {
   BarChartOutlined,
   LinkOutlined,
   RobotOutlined,
+  LayoutOutlined,
   FundOutlined,
   KeyOutlined,
   TeamOutlined,
@@ -44,6 +45,7 @@ const LEAF_ITEMS = [
   { key: '/gallery',     icon: <VideoCameraOutlined />,   label: 'Ảnh & video' },
   { key: '/reviews',     icon: <StarOutlined />,          label: 'Đánh giá' },
   { key: '/notifications', icon: <BellOutlined />,        label: 'Thông báo' },
+  { key: '/post-templates', icon: <LayoutOutlined />,      label: 'Cấu trúc bài' },
   { key: '/ai-prompts',  icon: <RobotOutlined />,         label: 'Prompt AI' },
   { key: '/site-config', icon: <SettingOutlined />,       label: 'Cài đặt' },
 ];
@@ -86,6 +88,7 @@ const MENU_GROUPED = [
     label: 'Hệ thống',
     children: [
       { key: '/notifications', icon: <BellOutlined />, label: 'Thông báo' },
+      { key: '/post-templates', icon: <LayoutOutlined />, label: 'Cấu trúc bài' },
       { key: '/ai-prompts',  icon: <RobotOutlined />,   label: 'Prompt AI' },
       { key: '/site-config', icon: <SettingOutlined />, label: 'Cài đặt' },
     ],
