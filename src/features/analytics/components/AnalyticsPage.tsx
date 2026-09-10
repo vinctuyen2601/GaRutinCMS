@@ -61,6 +61,13 @@ interface ProductFunnelRow {
   cartEvents: number;
   carters: number;
   checkouters: number;
+  /**
+   * Số khách CHẠM TỚI sản phẩm — xem trang, hoặc thêm giỏ, hoặc mang vào đặt
+   * hàng. Đây mới là mẫu số đúng cho các tỉ lệ: nút thêm giỏ nằm ngay trên thẻ
+   * sản phẩm ở trang danh sách nên khách mua được mà chưa từng mở trang chi
+   * tiết, chia cho "khách xem" thì có lúc ra 300%, có lúc chia cho 0.
+   */
+  reachers: number;
   quantitySold: number;
   orders: number;
   buyers: number;
@@ -113,7 +120,13 @@ const COT_PHEU: ColumnsType<ProductFunnelRow> = [
     width: 100,
     sorter: (a, b) => a.viewers - b.viewers,
     defaultSortOrder: 'descend',
-    render: (v: number) => v.toLocaleString('vi-VN'),
+    render: (v: number, r) => (
+      <Tip title={v === r.reachers
+        ? `${v} khách mở trang sản phẩm này`
+        : `${v} khách mở trang sản phẩm, ${r.reachers} khách chạm tới sản phẩm — chênh lệch là những người thêm giỏ thẳng từ trang danh sách mà không mở trang chi tiết. Các cột tỉ lệ chia cho ${r.reachers}.`}>
+        <span style={{ cursor: 'help' }}>{v.toLocaleString('vi-VN')}</span>
+      </Tip>
+    ),
   },
   {
     title: 'Thêm giỏ',
@@ -132,9 +145,9 @@ const COT_PHEU: ColumnsType<ProductFunnelRow> = [
     key: 'tiLeThemGio',
     align: 'right',
     width: 130,
-    sorter: (a, b) => (a.viewers ? a.carters / a.viewers : 0) - (b.viewers ? b.carters / b.viewers : 0),
+    sorter: (a, b) => (a.reachers ? a.carters / a.reachers : 0) - (b.reachers ? b.carters / b.reachers : 0),
     render: (_: unknown, r) => (
-      <TiLe value={r.carters} mau={r.viewers} nguong={10}
+      <TiLe value={r.carters} mau={r.reachers} nguong={10}
         goiY="Ít người bấm thêm giỏ — thường do ảnh chưa đẹp, mô tả sơ sài, giá cao hơn mặt bằng, hoặc đang hết hàng." />
     ),
   },
@@ -169,7 +182,7 @@ const COT_PHEU: ColumnsType<ProductFunnelRow> = [
     key: 'tiLeMua',
     align: 'right',
     width: 110,
-    sorter: (a, b) => (a.viewers ? a.buyers / a.viewers : 0) - (b.viewers ? b.buyers / b.viewers : 0),
+    sorter: (a, b) => (a.reachers ? a.buyers / a.reachers : 0) - (b.reachers ? b.buyers / b.reachers : 0),
     render: (_: unknown, r) =>
       // Bán được nhưng không nối được đơn nào với người xem thì hiện "—", KHÔNG
       // hiện "0%": 0% nghĩa là "có người xem mà không ai mua", còn ở đây là
@@ -180,7 +193,7 @@ const COT_PHEU: ColumnsType<ProductFunnelRow> = [
           <span style={{ color: '#bfbfbf', cursor: 'help' }}>—</span>
         </Tip>
       ) : (
-        <TiLe value={r.buyers} mau={r.viewers} nguong={2}
+        <TiLe value={r.buyers} mau={r.reachers} nguong={2}
           goiY="Nhiều người xem nhưng ít ai chốt. Nếu tỉ lệ thêm giỏ vẫn cao thì vướng ở giá hoặc khâu đặt hàng, không phải ở trang sản phẩm." />
       ),
   },
