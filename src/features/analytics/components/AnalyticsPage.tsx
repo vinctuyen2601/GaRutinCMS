@@ -73,10 +73,15 @@ function TiLe({ value, mau, nguong, goiY }: {
 }) {
   if (mau === 0) return <span style={{ color: '#d9d9d9' }}>—</span>;
   const pct = (value / mau) * 100;
+  // Tỉ lệ nhỏ hơn 0,05% thì toFixed(1) in ra đúng chữ "0.0%" — trong khi tử số
+  // vẫn khác 0. Người đọc thấy "thêm giỏ 1" cạnh "tỉ lệ 0.0%" sẽ kết luận bảng
+  // hỏng, và đó là kết luận hợp lý. Ghi "<0,1%" nói đúng sự thật: có, nhưng
+  // quá ít so với lượng khách xem.
+  const chu = value > 0 && pct < 0.05 ? '<0,1%' : pct.toFixed(1) + '%';
   if (mau < TOI_THIEU_MAU) {
     return (
       <Tip title={`Mới ${mau} khách — quá ít để kết luận. Cần khoảng ${TOI_THIEU_MAU} khách.`}>
-        <span style={{ color: '#bfbfbf' }}>{pct.toFixed(1)}%*</span>
+        <span style={{ color: '#bfbfbf' }}>{chu}*</span>
       </Tip>
     );
   }
@@ -84,7 +89,7 @@ function TiLe({ value, mau, nguong, goiY }: {
   return (
     <Tip title={yeu ? goiY : 'Ổn'}>
       <span style={{ color: yeu ? '#cf1322' : '#389e0d', fontWeight: 600, cursor: 'help' }}>
-        {pct.toFixed(1)}%
+        {chu}
       </span>
     </Tip>
   );
