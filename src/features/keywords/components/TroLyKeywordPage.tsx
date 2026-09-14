@@ -370,22 +370,30 @@ export default function TroLyKeywordPage() {
         />
       )}
 
+      {/* Segmented khong tu xuong dong duoc: 8 nut nhan tieng Viet cong lai
+          896px, gap hon hai lan man hinh dien thoai. De trong <Space> thi
+          khong kep duoc — .ant-space-item la flex item co min-width:auto nen
+          no cu phinh theo noi dung. Tach ra thanh khoi rieng, be rong bang
+          khung cha, roi cho cuon ngang ben trong. */}
+      <div className="w-full overflow-x-auto">
+          <Segmented
+            value={locViec}
+            onChange={(v) => setLocViec(v as ViecNenLam | 'tat-ca')}
+            options={[
+              { label: `Tất cả (${rows.length})`, value: 'tat-ca' },
+              // Chỉ hiện nhóm có dòng: nút "Gộp bài (0)" bấm vào ra bảng trống
+              // chỉ làm người dùng tưởng hỏng.
+              ...(Object.keys(VIEC) as ViecNenLam[])
+                .filter((v) => rows.some((r) => r.viec === v))
+                .map((v) => ({
+                  label: `${VIEC[v].nhan} (${rows.filter((r) => r.viec === v).length})`,
+                  value: v,
+                })),
+            ]}
+          />
+      </div>
+
       <Space wrap className="w-full">
-        <Segmented
-          value={locViec}
-          onChange={(v) => setLocViec(v as ViecNenLam | 'tat-ca')}
-          options={[
-            { label: `Tất cả (${rows.length})`, value: 'tat-ca' },
-            // Chỉ hiện nhóm có dòng: nút "Gộp bài (0)" bấm vào ra bảng trống
-            // chỉ làm người dùng tưởng hỏng.
-            ...(Object.keys(VIEC) as ViecNenLam[])
-              .filter((v) => rows.some((r) => r.viec === v))
-              .map((v) => ({
-                label: `${VIEC[v].nhan} (${rows.filter((r) => r.viec === v).length})`,
-                value: v,
-              })),
-          ]}
-        />
         <Input.Search
           placeholder="Tìm từ khoá"
           allowClear
@@ -437,24 +445,26 @@ export default function TroLyKeywordPage() {
       <Card
         size="small"
         title={<><BulbOutlined className="mr-2" />Gợi ý từ khoá từ Google</>}
-        extra={
-          <Space>
-            <Button onClick={quet} loading={dangQuet}>
-              Quét từ danh sách hiện có
-            </Button>
-          <Space.Compact>
+      >
+        {/* Hai nut nay truoc nam o `extra` cua Card. Dau Card la mot hang flex
+            khong xuong dong duoc, nen tren dien thoai chung day header rong
+            540px va lam tran ca trang. Dua xuong than Card thi xuong dong
+            duoc, va o nhap co gian thay vi ghim cung 280px. */}
+        <Space wrap className="w-full !mb-3">
+          <Button onClick={quet} loading={dangQuet}>
+            Quét từ danh sách hiện có
+          </Button>
+          <Space.Compact className="min-w-0">
             <Input
               placeholder="Nhập một từ khoá để tìm gợi ý quanh nó"
               value={tuKhoaTim}
               onChange={(e) => setTuKhoaTim(e.target.value)}
               onPressEnter={tim}
-              style={{ width: 280 }}
+              style={{ width: '100%', maxWidth: 280, minWidth: 150 }}
             />
             <Button onClick={tim} loading={dangTim}>Tìm</Button>
           </Space.Compact>
-          </Space>
-        }
-      >
+        </Space>
         <Paragraph type="secondary" className="text-xs !mb-3">
           Lấy từ <b>Google Autocomplete</b>, “Mọi người cũng hỏi” và “Tìm kiếm liên
           quan” — đều là truy vấn <b>thật</b> người dùng gõ. Đây là chỗ Search

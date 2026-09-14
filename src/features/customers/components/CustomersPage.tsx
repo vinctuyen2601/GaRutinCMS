@@ -239,7 +239,9 @@ export default function CustomersPage() {
           <UserOutlined className="mr-2" />
           Khách hàng {activeTab === 'active' ? `(${filtered.length}/${customers.length})` : ''}
         </Title>
-        <Space>
+        {/* wrap + o tim co gian: ghim 240px thi cum nay rong 414px, tran
+            khoi man hinh dien thoai du hang cha da co flex-wrap. */}
+        <Space wrap>
           {activeTab === 'active' && (
             <Input
               prefix={<SearchOutlined />}
@@ -247,7 +249,7 @@ export default function CustomersPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               allowClear
-              style={{ width: 240 }}
+              style={{ width: '100%', maxWidth: 240, minWidth: 160 }}
             />
           )}
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModal(true)}>

@@ -584,7 +584,7 @@ export default function ProductFormPage() {
           </div>
 
           <Divider titlePlacement="left">Cài đặt</Divider>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-6">
             <Form.Item label="Hiển thị" name="isActive" valuePropName="checked">
               <Switch />
             </Form.Item>

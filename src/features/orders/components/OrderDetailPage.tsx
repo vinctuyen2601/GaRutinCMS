@@ -49,8 +49,9 @@ export default function OrderDetailPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Thieu flex-wrap thi hang tieu de keo ngang ca trang tren dien thoai. */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/orders')}>Quay lại</Button>
           <Title level={4} className="!mb-0">Đơn hàng #{order.orderNumber}</Title>
         </div>
