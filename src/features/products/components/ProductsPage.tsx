@@ -247,7 +247,7 @@ export default function ProductsPage() {
         rowKey="id"
         loading={isLoading}
         pagination={featuredOnly ? false : { pageSize: 20 }}
-        scroll={{ x: 700 }}
+        scroll={{ x: 'max-content' }}
       />
     </div>
   );

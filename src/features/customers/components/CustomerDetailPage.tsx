@@ -178,6 +178,7 @@ export default function CustomerDetailPage() {
 
       <Card title={`Lịch sử đơn hàng (${orders.length})`}>
         <Table
+        scroll={{ x: 'max-content' }}
           dataSource={orders}
           columns={orderColumns}
           rowKey="id"

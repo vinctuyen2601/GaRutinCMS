@@ -80,6 +80,7 @@ function TopProductsTab({ from, to }: { from: string; to: string }) {
         <Empty description="Chưa có dữ liệu trong khoảng thời gian này" />
       ) : (
         <Table
+        scroll={{ x: 'max-content' }}
           dataSource={data}
           columns={columns}
           rowKey={(r: any) => r.productId ?? r.name}
@@ -165,6 +166,7 @@ function MonthlyCompareTab() {
 
       <Card title="Chi tiết so sánh" size="small">
         <Table
+        scroll={{ x: 'max-content' }}
           size="small"
           pagination={false}
           dataSource={[
@@ -251,6 +253,7 @@ function ProductConversionTab({ from, to }: { from: string; to: string }) {
         <Empty description="Chưa có dữ liệu trong khoảng thời gian này" />
       ) : (
         <Table
+        scroll={{ x: 'max-content' }}
           dataSource={data}
           columns={columns}
           rowKey="productId"

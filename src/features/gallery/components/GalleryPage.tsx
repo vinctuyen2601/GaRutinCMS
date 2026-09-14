@@ -210,7 +210,7 @@ export default function GalleryPage() {
         loading={isLoading}
         pagination={false}
         size="small"
-        scroll={{ x: 900 }}
+        scroll={{ x: 'max-content' }}
       />
 
       <Modal

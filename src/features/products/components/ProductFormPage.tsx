@@ -619,7 +619,7 @@ export default function ProductFormPage() {
                 rowKey="id"
                 loading={dangTaiDanhGia}
                 size="small"
-                scroll={{ x: 700 }}
+                scroll={{ x: 'max-content' }}
                 pagination={{ pageSize: 10, showTotal: t => `${t} đánh giá` }}
                 locale={{ emptyText: 'Sản phẩm này chưa có đánh giá nào' }}
                 columns={[

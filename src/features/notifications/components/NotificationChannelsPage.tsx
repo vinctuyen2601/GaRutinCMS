@@ -192,6 +192,7 @@ export default function NotificationChannelsPage() {
       </Card>
 
       <Table
+        scroll={{ x: 'max-content' }}
         dataSource={channels}
         columns={columns}
         rowKey="id"

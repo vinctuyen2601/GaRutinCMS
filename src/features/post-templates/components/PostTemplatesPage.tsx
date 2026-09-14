@@ -165,6 +165,7 @@ export default function PostTemplatesPage() {
       />
 
       <Table<PostTemplateRow>
+        scroll={{ x: 'max-content' }}
         rowKey="id"
         loading={isLoading}
         dataSource={rows}

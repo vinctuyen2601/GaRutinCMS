@@ -165,7 +165,7 @@ export default function ReviewsPage() {
           rowKey="id"
           loading={isLoading}
           size="small"
-          scroll={{ x: 700 }}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 20, showTotal: t => `${t} đánh giá` }}
           locale={{
             emptyText: (

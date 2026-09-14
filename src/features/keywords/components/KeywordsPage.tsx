@@ -223,7 +223,7 @@ export default function KeywordsPage() {
         rowKey="id"
         loading={isLoading}
         pagination={false}
-        scroll={{ x: 600 }}
+        scroll={{ x: 'max-content' }}
       />
 
       {/* Modal tạo mới */}

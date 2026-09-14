@@ -205,7 +205,7 @@ export default function CustomersPage() {
             loading={isLoading}
             size="small"
             pagination={{ pageSize: 20, showTotal: t => `${t} khách hàng` }}
-            scroll={{ x: 600 }}
+            scroll={{ x: 'max-content' }}
             onRow={(r) => ({ onClick: () => navigate(`/customers/${r.id}`), style: { cursor: 'pointer' } })}
           />
         </>
@@ -226,7 +226,7 @@ export default function CustomersPage() {
           loading={deletedLoading}
           size="small"
           pagination={{ pageSize: 20, showTotal: t => `${t} khách hàng` }}
-          scroll={{ x: 500 }}
+          scroll={{ x: 'max-content' }}
         />
       ),
     },

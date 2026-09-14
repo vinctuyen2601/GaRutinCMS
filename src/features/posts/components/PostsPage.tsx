@@ -239,7 +239,7 @@ export default function PostsPage() {
         rowKey="id"
         loading={isLoading}
         pagination={{ pageSize: 20 }}
-        scroll={{ x: 600 }}
+        scroll={{ x: 'max-content' }}
       />
     </div>
   );

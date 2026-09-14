@@ -501,7 +501,7 @@ export default function AnalyticsPage() {
             columns={COT_PHEU}
             rowKey="slug"
             size="small"
-            scroll={{ x: 900 }}
+            scroll={{ x: 'max-content' }}
             pagination={{ pageSize: 20, showTotal: t => `${t} sản phẩm` }}
           />
           <div className="text-xs text-gray-500 mt-3 leading-relaxed">
@@ -536,7 +536,7 @@ export default function AnalyticsPage() {
             rowKey={(r) => `${r.source}|${r.campaign}`}
             size="small"
             pagination={false}
-            scroll={{ x: 460 }}
+            scroll={{ x: 'max-content' }}
           />
         </Spin>
         <div className="text-xs text-gray-400 mt-2">
@@ -561,7 +561,7 @@ export default function AnalyticsPage() {
             rowKey="bucket"
             size="small"
             pagination={false}
-            scroll={{ x: 460 }}
+            scroll={{ x: 'max-content' }}
           />
         </Spin>
         <div className="text-xs text-gray-400 mt-2">
@@ -596,7 +596,7 @@ export default function AnalyticsPage() {
             columns={tableColumns}
             rowKey="path"
             size="small"
-            scroll={{ x: 500 }}
+            scroll={{ x: 'max-content' }}
             pagination={{
               pageSize: 20,
               showSizeChanger: true,

@@ -81,7 +81,7 @@ export default function OrdersPage() {
         rowKey="id"
         loading={isLoading}
         pagination={{ pageSize: 20 }}
-        scroll={{ x: 800 }}
+        scroll={{ x: 'max-content' }}
         onRow={(r) => ({ onClick: () => navigate(`/orders/${r.id}`) })}
         rowClassName="cursor-pointer hover:bg-gray-50"
       />

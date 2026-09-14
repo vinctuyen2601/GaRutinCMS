@@ -175,6 +175,7 @@ export default function UtmBuilderPage() {
 
       <Card size="small" title="Link này ghi lại những gì">
         <Table
+        scroll={{ x: 'max-content' }}
           size="small"
           pagination={false}
           rowKey="ts"

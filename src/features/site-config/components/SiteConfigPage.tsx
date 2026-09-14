@@ -82,7 +82,7 @@ export default function SiteConfigPage() {
           rowKey="key"
           pagination={false}
           size="small"
-          scroll={{ x: 500 }}
+          scroll={{ x: 'max-content' }}
           locale={{ emptyText: 'Chưa có cấu hình' }}
         />
       </Card>

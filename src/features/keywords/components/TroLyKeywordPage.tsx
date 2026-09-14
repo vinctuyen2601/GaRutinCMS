@@ -425,6 +425,7 @@ export default function TroLyKeywordPage() {
       )}
 
       <Table<DongPhanTich>
+        scroll={{ x: 'max-content' }}
         rowKey="id"
         loading={isLoading}
         dataSource={loc}

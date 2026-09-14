@@ -74,6 +74,7 @@ export default function OrderDetailPage() {
 
       <Card title="Sản phẩm đặt">
         <Table
+        scroll={{ x: 'max-content' }}
           dataSource={order.items}
           columns={itemColumns}
           rowKey={(r, i) => `item-${i}`}
