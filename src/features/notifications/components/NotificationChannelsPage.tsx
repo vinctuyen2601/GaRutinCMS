@@ -175,7 +175,7 @@ export default function NotificationChannelsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
         <Title level={4} className="!mb-0">
           <BellOutlined className="mr-2" />Kênh thông báo
         </Title>

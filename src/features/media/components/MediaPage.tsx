@@ -72,7 +72,7 @@ export default function MediaPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
         <Title level={4} className="!mb-0">
           <FileImageOutlined className="mr-2" />
           Quản lý Media
@@ -150,7 +150,7 @@ export default function MediaPage() {
                 <Text ellipsis={{ tooltip: file.originalName }} className="text-xs block">
                   {file.originalName}
                 </Text>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-y-2">
                   <Tag color="default" className="text-xs m-0">{formatSize(file.size)}</Tag>
                   <Space size={4}>
                     <Button

@@ -205,7 +205,7 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
         <Title level={4} className="!mb-0">
           Sản phẩm ({featuredOnly ? featuredList.length : `${filtered.length}/${products.length}`})
         </Title>

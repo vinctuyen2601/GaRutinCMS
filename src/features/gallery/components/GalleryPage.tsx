@@ -193,7 +193,7 @@ export default function GalleryPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
         <Title level={4} className="!mb-0">Ảnh & video trang trại ({items.length})</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => mo('moi')}>Thêm</Button>
       </div>

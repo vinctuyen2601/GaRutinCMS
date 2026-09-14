@@ -23,7 +23,7 @@ export default function ScorePanel({ result, title = 'Điểm chất lượng' }
     <Card
       size="small"
       title={
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-y-2">
           <span>{title}</span>
           <div className="flex items-center gap-2">
             <Text strong style={{ color: result.color, fontSize: 18 }}>

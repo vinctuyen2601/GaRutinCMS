@@ -337,8 +337,10 @@ export default function TroLyKeywordPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Title level={4} className="!mb-0">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
+        {/* whitespace-nowrap: hai nut ben phai bop tieu de con 38px, vo
+            thanh 6 dong. Ep mot dong, nut tu rot xuong hang duoi. */}
+        <Title level={4} className="!mb-0 whitespace-nowrap">
           <SearchOutlined className="mr-2" />Từ khoá &amp; SEO
         </Title>
         <Space>

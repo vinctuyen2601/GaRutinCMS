@@ -213,7 +213,7 @@ export default function PostsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
         <Title level={4} className="!mb-0">Bài viết ({posts.length})</Title>
         <Space>
           <Tooltip title={activeKeyword ? `Crawl 3 bài với keyword "${activeKeyword.keyword}"` : 'Chưa có keyword active'}>
