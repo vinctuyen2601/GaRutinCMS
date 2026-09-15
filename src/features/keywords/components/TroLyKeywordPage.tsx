@@ -19,7 +19,7 @@ import {
 } from '../services/tro-ly';
 import { getApiError } from '@/lib/error';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 /**
  * Nhãn cho từng việc nên làm.
