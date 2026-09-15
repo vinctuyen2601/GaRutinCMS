@@ -68,7 +68,15 @@ function DanY({ bai }: { bai: BaiKhop }) {
   );
 }
 
-export default function TroLyKeywordPage() {
+/**
+ * Tab "Từ khoá" — bảng phân tích từ Search Console.
+ *
+ * Trước 15/09/2026 đây là cả trang /keywords. Nay nó là một trong bốn tab của
+ * SeoPage: bảng này chỉ thấy truy vấn mà website ĐÃ có thứ hạng, nên nó mù với
+ * hai câu quan trọng hơn — trang có được lập chỉ mục không, và ai đang đứng
+ * trên mình. Ba tab kia trả lời những câu đó.
+ */
+export default function TabTuKhoa() {
   const navigate = useNavigate();
   const [xemBoQua, setXemBoQua] = useState(false);
   const { data: rows = [], isLoading, mutate } = useSWR(
@@ -338,11 +346,8 @@ export default function TroLyKeywordPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-y-2">
-        {/* whitespace-nowrap: hai nut ben phai bop tieu de con 38px, vo
-            thanh 6 dong. Ep mot dong, nut tu rot xuong hang duoi. */}
-        <Title level={4} className="!mb-0 whitespace-nowrap">
-          <SearchOutlined className="mr-2" />Từ khoá &amp; SEO
-        </Title>
+        {/* Tiêu đề nằm ở SeoPage, đây chỉ giữ chỗ để hai nút vẫn dạt phải. */}
+        <span />
         <Space>
           {gsc?.sanSang && (
             <Button type="primary" icon={<SyncOutlined />} onClick={dongBo} loading={dangDongBo}>

@@ -151,3 +151,109 @@ export const promptBoSung = (keyword: string, slugs: string[]) =>
 /** Đường làm tay: dán kết quả từ chat ngoài vào để đọc ra. */
 export const applyBoSung = (text: string) =>
   api.post<KetQuaBoSung>('/admin/keywords/bo-sung/apply', { text }).then((r) => r.data);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sức khoẻ chỉ mục · Đối thủ · Vùng trắng
+//
+// Bảy endpoint dưới đây đã có ở máy chủ từ trước mà chưa chỗ nào trong CMS gọi
+// tới. Chúng trả lời ba câu người quản trị thật sự cần hỏi, và câu đầu tiên
+// quan trọng hơn cả bảng từ khoá: bài viết ra mà Google không lập chỉ mục thì
+// mọi con số thứ hạng đều vô nghĩa.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TrangThaiUrl = {
+  url: string;
+  trangThai?: string;
+  robots?: string;
+  lanCuoiThuThap?: string;
+  urlChinhTac?: string;
+  loi?: string;
+};
+
+/**
+ * TỐI ĐA 10 URL MỖI LƯỢT — con số này không tuỳ tiện: API nằm sau CloudFront,
+ * bị cắt cứng ở 30 giây và khi đó trả HTML 504 của chính nó, log ứng dụng
+ * không ghi gì nên lỗi trông như máy chủ im lặng. Mỗi URL là một lời gọi ra
+ * Google. Người gọi tự chia lô — xem kiemChiMucTheoLo bên dưới.
+ */
+export const kiemChiMuc = (urls: string[]) =>
+  api.post<TrangThaiUrl[]>('/admin/keywords/kiem-chi-muc', { urls }).then((r) => r.data);
+
+/** Chia lô 10, chạy tuần tự, báo tiến độ. Lô hỏng không làm hỏng cả mẻ. */
+export async function kiemChiMucTheoLo(
+  urls: string[],
+  tienDo?: (xong: number, tong: number) => void,
+): Promise<TrangThaiUrl[]> {
+  const ra: TrangThaiUrl[] = [];
+  for (let i = 0; i < urls.length; i += 10) {
+    const lo = urls.slice(i, i + 10);
+    try {
+      ra.push(...(await kiemChiMuc(lo)));
+    } catch (e) {
+      ra.push(...lo.map((url) => ({ url, loi: (e as Error).message })));
+    }
+    tienDo?.(Math.min(i + 10, urls.length), urls.length);
+  }
+  return ra;
+}
+
+export type TrangThaiSitemap = {
+  duongDan: string;
+  lanCuoiTaiVe?: string;
+  lanCuoiGui?: string;
+  coLoi?: string;
+  canhBao?: string;
+  daXuLy?: boolean;
+  noiDung?: { type: string; submitted: string; indexed: string }[];
+};
+
+export const getSitemap = () =>
+  api.get<TrangThaiSitemap[] | { loi: string }>('/admin/keywords/sitemap').then((r) => r.data);
+
+export type DongSerp = {
+  hang: number;
+  tenMien: string;
+  url: string;
+  tieuDe: string;
+  loai: 'san' | 'mang-xa-hoi' | 'cua-minh' | 'khac';
+};
+
+export type KetQuaSerp = {
+  tuKhoa: string;
+  ketQua: DongSerp[];
+  hangCuaMinh: number | null;
+  soSan: number;
+  soMangXaHoi: number;
+  ketLuan: 'kho-voi-toi' | 'voi-toi-duoc';
+  loi?: string;
+};
+
+/** Cũng tối đa 10 từ khoá mỗi lượt, cùng lý do CloudFront như trên. */
+export const doiThu = (keywords: string[]) =>
+  api.post<KetQuaSerp[]>('/admin/keywords/doi-thu', { keywords }).then((r) => r.data);
+
+export const tuKhoaHangDau = (so = 10) =>
+  api.get<string[]>('/admin/keywords/hang-dau', { params: { so } }).then((r) => r.data);
+
+export type DongVungTrang = {
+  keyword: string;
+  loai: string;
+  thuongMai: boolean;
+  /** Bao nhiêu gợi ý khác cùng cụm lõi — thay cho số lượt tìm mà ta không có. */
+  coCum: number;
+  /** Slug bài đang nhắm cụm này, null nếu chưa có bài nào. */
+  baiGan: string | null;
+  diem: number;
+};
+
+export const getVungTrang = () =>
+  api.get<DongVungTrang[]>('/admin/keywords/vung-trang').then((r) => r.data);
+
+export const moRong = (cumGoc: string[], dot = 0, moiDot = 20) =>
+  api.post<{ them: number; conLai: string[] }>('/admin/keywords/mo-rong', { cumGoc, dot, moiDot })
+    .then((r) => r.data);
+
+export type DongTrangGsc = { page: string; clicks: number; impressions: number; position: number };
+
+export const getGscTrang = (soNgay = 90) =>
+  api.get<DongTrangGsc[]>('/admin/keywords/gsc-trang', { params: { soNgay } }).then((r) => r.data);
