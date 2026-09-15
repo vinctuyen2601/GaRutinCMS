@@ -36,8 +36,10 @@ export default function VungTrang() {
 
   const nap = async () => {
     setDang(true);
-    try { setRows(await getVungTrang()); }
-    catch (e) { message.error((e as Error).message); }
+    try {
+      const r = await getVungTrang();
+      setRows(r.dong);
+    } catch (e) { message.error((e as Error).message); }
     finally { setDang(false); }
   };
   useEffect(() => { void nap(); }, []);
@@ -52,13 +54,19 @@ export default function VungTrang() {
     if (!goc.length) return message.warning('Nhập ít nhất một cụm gốc, cách nhau bằng dấu phẩy');
     setDang(true);
     try {
-      let conLai = goc, dot = 0, them = 0;
-      while (conLai.length && dot < 20) {
-        const r = await moRong(conLai, dot, 20);
-        them += r.them; conLai = r.conLai; dot++;
-        setTienDo([goc.length - conLai.length, goc.length]);
+      // `conLai` là SỐ cụm còn lại, không phải danh sách — gọi tiếp bằng cách
+      // tăng `dot`, giữ nguyên cụm gốc. Trần 30 lượt để một cụm gốc quá rộng
+      // không quay vòng mãi.
+      let dot = 0, them = 0, chan = false;
+      for (;;) {
+        const r = await moRong(goc, dot, 20);
+        them += r.them;
+        setTienDo([r.tongCum - r.conLai, r.tongCum]);
+        if (r.nghiBiChan) { chan = true; break; }
+        if (r.conLai <= 0 || ++dot > 30) break;
       }
-      message.success(`Thêm ${them} gợi ý mới`);
+      if (chan) message.warning(`Thêm ${them} gợi ý rồi dừng: hỏi liên tiếp mà Google trả rỗng, nhiều khả năng đang bị chặn tạm thời. Thử lại sau.`);
+      else message.success(`Thêm ${them} gợi ý mới`);
       await nap();
     } catch (e) { message.error((e as Error).message); }
     finally { setDang(false); setTienDo([0, 0]); }

@@ -246,11 +246,39 @@ export type DongVungTrang = {
   diem: number;
 };
 
+export type KetQuaVungTrang = {
+  tong: number;
+  theoLoai: Record<string, number>;
+  dong: DongVungTrang[];
+};
+
+/**
+ * Máy chủ trả OBJECT `{ tong, theoLoai, dong }`, KHÔNG phải mảng trần.
+ * Khai sai kiểu ở đây từng làm trắng màn hình cả tab: `rows.filter is not a
+ * function`. Nên vừa khai đúng, vừa chốt lại bằng Array.isArray — đổi dạng
+ * phản hồi ở máy chủ thì tab hiện rỗng chứ không sập.
+ */
 export const getVungTrang = () =>
-  api.get<DongVungTrang[]>('/admin/keywords/vung-trang').then((r) => r.data);
+  api.get<KetQuaVungTrang>('/admin/keywords/vung-trang').then((r) => ({
+    tong: r.data?.tong ?? 0,
+    theoLoai: r.data?.theoLoai ?? {},
+    dong: Array.isArray(r.data?.dong) ? r.data.dong : [],
+  }));
+
+export type KetQuaMoRong = {
+  dot: number;
+  daHoi: number;
+  them: number;
+  rong: number;
+  /** Hỏi gần hết mà toàn rỗng — nhiều khả năng Google đang chặn, đừng chạy tiếp. */
+  nghiBiChan: boolean;
+  tongCum: number;
+  /** SỐ cụm còn lại, không phải danh sách. Gọi tiếp bằng cách tăng `dot`. */
+  conLai: number;
+};
 
 export const moRong = (cumGoc: string[], dot = 0, moiDot = 20) =>
-  api.post<{ them: number; conLai: string[] }>('/admin/keywords/mo-rong', { cumGoc, dot, moiDot })
+  api.post<KetQuaMoRong>('/admin/keywords/mo-rong', { cumGoc, dot, moiDot })
     .then((r) => r.data);
 
 export type DongTrangGsc = { page: string; clicks: number; impressions: number; position: number };
