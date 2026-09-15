@@ -10,6 +10,10 @@ export const EVENTS = [
   { value: 'order.created',        label: '🛒 Đơn hàng mới' },
   { value: 'order.status_updated', label: '📦 Cập nhật trạng thái đơn' },
   { value: 'review.created',       label: '⭐ Đánh giá mới (chờ duyệt)' },
+  // Chạy 7h12 mỗi sáng, CHỈ gửi khi có vấn đề — xem canh/canh.service.ts bên
+  // backend. Danh sách này GÕ CỨNG: thêm sự kiện ở backend mà quên thêm vào
+  // đây thì tác vụ chạy nhưng không ai tick được, nên không kênh nào nhận.
+  { value: 'canh.canh-bao',        label: '🔧 Canh sức khoẻ — liên kết chết, sitemap' },
 ];
 
 export interface NotificationChannel {
