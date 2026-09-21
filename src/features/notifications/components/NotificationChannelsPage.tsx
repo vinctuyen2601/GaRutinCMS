@@ -13,10 +13,22 @@ import type { NotificationChannel, ChannelType } from '../types';
 
 const { Title, Text } = Typography;
 
-const TYPE_CFG: Record<ChannelType, { label: string; color: string; fields: { key: string; label: string; placeholder: string; secret?: boolean }[] }> = {
+/**
+ * `color` là màu ĐẶC (dùng cho biểu tượng, biểu đồ). `the` là bộ ba cho thẻ chữ.
+ *
+ * Trước 21/09/2026 thẻ viết `<Tag color={hex} style={{ color: '#fff' }}>`. Mẫu
+ * đó VÔ HÌNH: antd v5 không tô nền bằng mã màu truyền vào, nó tự suy ra một nền
+ * NHẠT từ màu đó — nên chữ trắng nằm trên nền gần trắng. Đo trên trình duyệt
+ * thật: 1,12:1. Cùng lỗi với cột Nền tảng ở trang Phân tích, sửa cùng ngày.
+ *
+ * Bỏ ép chữ trắng thôi thì antd cho 2,7 – 3,4:1, vẫn dưới ngưỡng 4.5 của chữ
+ * thường. Nên đặt hẳn màu đo được, ≥7:1. Đổi thì phải đo lại.
+ */
+const TYPE_CFG: Record<ChannelType, { label: string; color: string; the: { bg: string; fg: string; border: string }; fields: { key: string; label: string; placeholder: string; secret?: boolean }[] }> = {
   telegram: {
     label: 'Telegram',
     color: '#229ED9',
+    the: { bg: '#e8f5fc', fg: '#0a5375', border: '#bfe4f6' },
     fields: [
       { key: 'botToken', label: 'Bot Token', placeholder: '110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw', secret: true },
       { key: 'chatId',   label: 'Chat ID',   placeholder: '-1001234567890 (group) hoặc 123456789 (user)' },
@@ -25,6 +37,7 @@ const TYPE_CFG: Record<ChannelType, { label: string; color: string; fields: { ke
   zalo: {
     label: 'Zalo OA',
     color: '#0068FF',
+    the: { bg: '#e8f1ff', fg: '#00429b', border: '#bcd5fb' },
     fields: [
       { key: 'accessToken', label: 'Access Token', placeholder: 'OA Access Token từ Zalo Developers', secret: true },
       { key: 'userId',      label: 'Zalo User ID', placeholder: 'ID người nhận đã follow OA' },
@@ -33,6 +46,7 @@ const TYPE_CFG: Record<ChannelType, { label: string; color: string; fields: { ke
   email: {
     label: 'Email',
     color: '#EA4335',
+    the: { bg: '#fdeceb', fg: '#941a10', border: '#f8c8c4' },
     // Khoá gửi thư và địa chỉ người gửi nằm ở biến môi trường của máy chủ, vì
     // Resend chỉ cho gửi từ tên miền đã xác thực — để người dùng tự gõ thì chỉ
     // sinh ra lỗi khó hiểu. Ở đây chỉ khai báo người nhận.
@@ -117,7 +131,14 @@ export default function NotificationChannelsPage() {
       render: (_: unknown, r: NotificationChannel) => (
         <div>
           <div className="font-medium">{r.name}</div>
-          <Tag color={TYPE_CFG[r.type]?.color} style={{ color: '#fff', borderColor: TYPE_CFG[r.type]?.color, fontSize: 11 }}>
+          <Tag
+            style={{
+              fontSize: 11,
+              background: TYPE_CFG[r.type]?.the.bg,
+              color: TYPE_CFG[r.type]?.the.fg,
+              borderColor: TYPE_CFG[r.type]?.the.border,
+            }}
+          >
             {TYPE_CFG[r.type]?.label}
           </Tag>
         </div>
