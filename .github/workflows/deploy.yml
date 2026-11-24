@@ -1,0 +1,57 @@
+name: Deploy CMS lên EC2
+
+# Rời Vercel ngày 24/11/2026 (gói miễn phí bị khoá: 402 DEPLOYMENT_DISABLED).
+# CMS là trang tĩnh: build ở đây, nginx trên EC2 phục vụ thẳng thư mục
+# /var/www/garutin-cms/current — không có tiến trình nào phải chạy.
+# Cấu hình nginx: /etc/nginx/sites-available/garutin-cms (không nằm trong git).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cms
+  cancel-in-progress: false
+
+env:
+  APP: garutin-cms
+  # VITE_* được gắn cứng vào bản build.
+  VITE_API_URL: https://api.garutin.com/api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: tar -czf release.tgz -C dist .
+
+      - name: Chép lên máy chủ và chuyển bản
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/key && chmod 600 ~/.ssh/key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          REL="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          scp -i ~/.ssh/key release.tgz "ubuntu@$HOST:/tmp/$APP-$REL.tgz"
+          ssh -i ~/.ssh/key "ubuntu@$HOST" "APP=$APP REL=$REL bash -s" <<'SH'
+          set -e
+          GOC=/var/www/$APP
+          mkdir -p "$GOC/releases/$REL"
+          tar -xzf "/tmp/$APP-$REL.tgz" -C "$GOC/releases/$REL"
+          rm -f "/tmp/$APP-$REL.tgz"
+          test -f "$GOC/releases/$REL/index.html"
+          ln -sfn "$GOC/releases/$REL" "$GOC/current"
+          ls -1dt "$GOC"/releases/* | tail -n +4 | xargs -r rm -rf
+          echo "=== Đang phục vụ $REL"
+          SH
